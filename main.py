@@ -63,7 +63,7 @@ class App:
                 running = False
             
             self.handleKeys()
-            self.handleMouse
+            self.handleMouse()
             glfw.poll_events()
             self.scene.update(self.frameTime / 16.7)
             self.renderer.render(self.scene)
@@ -84,16 +84,7 @@ class App:
             combo_move += 4
         if glfw.get_key(self.window, GLFWC.GLFW_KEY_D) == GLFWC.GLFW_PRESS:
             combo_move += 8
-
-        if glfw.get_key(self.window, GLFWC.GLFW_KEY_UP) == GLFWC.GLFW_PRESS:
-            combo_spin_y += 1
-        if glfw.get_key(self.window, GLFWC.GLFW_KEY_LEFT) == GLFWC.GLFW_PRESS:
-            combo_spin_x += 1
-        if glfw.get_key(self.window, GLFWC.GLFW_KEY_DOWN) == GLFWC.GLFW_PRESS:
-            combo_spin_y -= 1
-        if glfw.get_key(self.window, GLFWC.GLFW_KEY_RIGHT) == GLFWC.GLFW_PRESS:
-            combo_spin_x -= 1
-
+            
         if combo_move in self.walk_offset_lookup:
             directionModifier = self.walk_offset_lookup[combo_move]
             dPos = [
@@ -102,11 +93,7 @@ class App:
                 0
             ]
             self.scene.move_camera(dPos)
-
-        rate = self.frameTime / 16.7
-        theta_increment = rate * combo_spin_x
-        phi_increment = rate * combo_spin_y * 100
-        self.scene.spin_camera(theta_increment, phi_increment)
+            
 
     def handleMouse(self):
         (x, y) = glfw.get_cursor_pos(self.window)
@@ -149,7 +136,7 @@ class GraphicsEngine:
 
         projection_transform = pyrr.matrix44.create_perspective_projection(
             fovy = 45, aspect = 640 / 480,
-            near = 0.1, far = 10, dtype=np.float32
+            near = 0.1, far = 1000, dtype=np.float32
         )
 
         glUniformMatrix4fv(
@@ -224,8 +211,8 @@ class Camera:
         self.forwards = np.array(
             [
                 np.cos(np.deg2rad(self.theta)) * np.cos(np.deg2rad(self.phi)),
-                np.sin(np.deg2rad(self.theta)) * np.cos(np.deg2rad(self.phi)),
-                np.cos(np.deg2rad(self.phi))
+                np.sin(np.deg2rad(self.theta)),
+                np.cos(np.deg2rad(self.theta)) * np.sin(np.deg2rad(self.phi)),
             ]
         )
 
@@ -265,13 +252,8 @@ class Scene:
         self.camera.position += dPos
     
     def spin_camera(self, dTheta, dPhi):
-        self.camera.theta += dTheta
-        if self.camera.theta > 360:
-            self.camera.theta -= 360
-        elif self.camera.theta < 0:
-            self.camera.theta += 360
-
-        self.camera.phi = min(89, max(-89, self.camera.phi + dPhi))
+        self.camera.theta = min(89, max(-89, self.camera.theta + dTheta))
+        self.camera.phi = (self.camera.phi + dPhi) % 360
 
         self.camera.update_vectors()
 
