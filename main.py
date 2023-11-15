@@ -72,8 +72,6 @@ class App:
 
     def handleKeys(self):
         combo_move = 0
-        combo_spin_x = 0
-        combo_spin_y = 0
         directionModifier = 0
 
         if glfw.get_key(self.window, GLFWC.GLFW_KEY_W) == GLFWC.GLFW_PRESS:
@@ -88,19 +86,18 @@ class App:
         if combo_move in self.walk_offset_lookup:
             directionModifier = self.walk_offset_lookup[combo_move]
             dPos = [
-                0.1 * self.frameTime / 16.7 * np.cos(np.deg2rad(self.scene.camera.theta + directionModifier)),
-                0.1 * self.frameTime / 16.7 * np.sin(np.deg2rad(self.scene.camera.theta + directionModifier)),
-                0
+                0.5 * self.frameTime / 16.7 * np.cos(np.deg2rad(-self.scene.camera.phi + directionModifier)),
+                0,
+                -0.5 * self.frameTime / 16.7 * np.sin(np.deg2rad(-self.scene.camera.phi + directionModifier)),
             ]
             self.scene.move_camera(dPos)
             
-
     def handleMouse(self):
         (x, y) = glfw.get_cursor_pos(self.window)
         rate = self.frameTime / 16.7
-        theta_increment = rate * ((SCREEN_WIDTH / 2) - x)
-        phi_increment = rate * ((SCREEN_HEIGHT / 2) - y)
-        self.scene.spin_camera(theta_increment, phi_increment)
+        phi_increment = rate * ((SCREEN_WIDTH / 2) - x)
+        theta_increment = rate * ((SCREEN_HEIGHT / 2) - y)
+        self.scene.spin_camera(phi_increment, theta_increment)
         glfw.set_cursor_pos(self.window, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
 
     def calculateFramerate(self):
@@ -120,7 +117,9 @@ class App:
 class GraphicsEngine:
     def __init__(self):
         self.wood_texture = Material("gfx/wood.png")
+        self.cat_texture = Material("gfx/cat.png")
         self.cube_mesh = Mesh("models/glass.obj")
+        self.plane_mesh = Plane()
 
         #инициализация opengl
         glClearColor(0.1, 0.2, 0.2, 1)  #цвет фона/очистки
@@ -130,9 +129,9 @@ class GraphicsEngine:
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader, "imageTexture"), 0)
 
-        #glEnable(GL_BLEND)
+        glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
-        #glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         projection_transform = pyrr.matrix44.create_perspective_projection(
             fovy = 45, aspect = 640 / 480,
@@ -170,6 +169,29 @@ class GraphicsEngine:
             up = scene.camera.up, dtype=np.float32)
         
         glUniformMatrix4fv(self.viewMatrixLocation, 1, GL_FALSE, view_transform)
+
+
+        self.cat_texture.use()
+        glBindVertexArray(self.plane_mesh.vao)
+
+        for plane in scene.planes:
+            model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+            #вращение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_eulers(
+                    eulers=np.radians(plane.eulers), dtype=np.float32
+                )
+            )
+            #передвижение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_translation(
+                    vec=np.array(plane.position), dtype=np.float32
+                )
+            )
+            glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+            glDrawArrays(GL_TRIANGLES, 0, self.plane_mesh.vertex_count)
 
         self.wood_texture.use()
         glBindVertexArray(self.cube_mesh.vao)
@@ -216,7 +238,7 @@ class Camera:
             ]
         )
 
-        globalUp = np.array([0, 0, 1], dtype=np.float32)
+        globalUp = np.array([0, 1, 0], dtype=np.float32)
 
         self.right = np.cross(self.forwards, globalUp)
 
@@ -224,40 +246,73 @@ class Camera:
 
 class Scene:
     def __init__(self):
+        self.planes = [
+            Obj3D(
+                position = [6, 0, -30],
+                eulers = [0, 0, 0]
+            ),
+            Obj3D(
+                position = [6, 0, 40],
+                eulers = [0, 0, 0]
+            ),
+            Obj3D(
+                position = [6, -10, -30],
+                eulers = [-90, 0, 0]
+            ),
+            Obj3D(
+                position = [6, 40, -30],
+                eulers = [-90, 0, 0]
+            ),
+        ]
+
         self.cubes = [
-            Cube(
+            Obj3D(
                 position = [6, 0, 0],
                 eulers = [0, 0, 0]
             ),
-            Cube(
+            Obj3D(
                 position = [0, -3, -4],
                 eulers = [0, 0, 0]
             ),
-            Cube(
+            Obj3D(
                 position = [7, -3, 7],
                 eulers = [0, 0, 0]
+            ),
+            Obj3D(
+                position = [16, 10, 10],
+                eulers = [1, 0, 0]
+            ),
+            Obj3D(
+                position = [10, -13, -140],
+                eulers = [-90, 0, 0]
+            ),
+            Obj3D(
+                position = [17, -13, -30],
+                eulers = [0, 0, 1]
             )
         ]
 
-        self.camera = Camera(position=[0, 0, 2])
+        self.camera = Camera(position=[-10, 0, 2])
 
     def update(self, rate):
-        for cube in self.cubes:
+        '''for cube in self.cubes:
             cube.eulers[1] += 0.25 * rate
             if cube.eulers[1] > 360:
-                cube.eulers[1] -= 360
+                cube.eulers[1] -= 360'''
 
     def move_camera(self, dPos):
         dPos = np.array(dPos, dtype = np.float32)
         self.camera.position += dPos
     
-    def spin_camera(self, dTheta, dPhi):
+    def spin_camera(self, dPhi, dTheta):
+        #self.camera.theta = (self.camera.theta + dTheta) % 360
         self.camera.theta = min(89, max(-89, self.camera.theta + dTheta))
-        self.camera.phi = (self.camera.phi + dPhi) % 360
+        self.camera.phi = (self.camera.phi - dPhi) % 360
+        #self.camera.phi = min(89, max(-89, self.camera.phi + dPhi))
 
         self.camera.update_vectors()
 
-class Cube:
+class Obj3D:
     def __init__(self, position, eulers):
         self.position = np.array(position, dtype=np.float32)
         self.eulers = np.array(eulers, dtype=np.float32)
@@ -378,6 +433,47 @@ class Material:
 
     def destroy(self):
         glDeleteTextures(1, (self.texture,))
+
+class Plane:
+    def __init__(self):
+
+        #вершины - x, y, z, r, g, b
+        self.vertices = (
+            50.0, -50.0, 0.0, 0.0, 0.0, 0.0,
+            50.0, 50.0, 0.0, 0.0, 1.0, 0.0,
+            -50.0, 50.0, 0.0, 1.0, 1.0, 0.0,
+            -50.0, -50.0, 0.0, 1.0, 0.0, 0.0,
+        )
+
+        self.vertices = np.array(self.vertices, dtype=np.float32)   #тип важен для правильного распознавания OpenGl
+
+        self.vertex_count = 3
+
+        self.vao = glGenVertexArrays(1) #vertex array - массив вершин
+        glBindVertexArray(self.vao)
+        self.vbo = glGenBuffers(1)  #буфер вершин
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glBufferData(GL_ARRAY_BUFFER, self.vertices.nbytes, self.vertices, GL_STATIC_DRAW)
+
+        #атрибут 0 - позиция
+        glEnableVertexAttribArray(0)
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(0))
+        #0 - номер атрибута
+        #3 - количество точек
+        #тип значения
+        #нужна ли нормализация значений
+        #количество байт для перехода к след. значению
+        #смещение
+
+        #атрибут 1 - цвет
+        glEnableVertexAttribArray(1)
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(12))
+
+
+    #очистка памяти
+    def destroy(self):
+        glDeleteVertexArrays(1, (self.vao,))
+        glDeleteBuffers(1, (self.vbo,))
 
 if __name__ == "__main__":
     window = initialize_glfw()
