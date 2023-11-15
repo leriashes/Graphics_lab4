@@ -2,6 +2,7 @@ import pygame as pg
 from OpenGL.GL import *
 import numpy as np
 from OpenGL.GL.shaders import compileProgram, compileShader
+import pyrr 
 
 class App:
 
@@ -18,19 +19,36 @@ class App:
         #инициализация opengl
         glClearColor(0.1, 0.2, 0.2, 1)  #цвет фона/очистки
         glEnable(GL_BLEND)
+        glEnable(GL_DEPTH_TEST)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
         
 
         #создание объекта
-        self.triangle = Triangle()
+        self.cube = Cube(
+            position = [0, 0, -3],
+            eulers = [0, 0, 0]
+        )
 
-        self.wood_texture = Material("gfx/cat.png")
+        self.cube_mesh = CubeMesh()
+
+        self.wood_texture = Material("gfx/wood.png")
+
+        projection_transform = pyrr.matrix44.create_perspective_projection(
+            fovy = 45, aspect = 640 / 480,
+            near = 0.1, far = 10, dtype=np.float32
+        )
 
         #создание шейдера
         self.shader = self.createShader("shaders/vertex.txt", "shaders/fragment.txt")
         
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader, "imageTexture"), 0)
+        glUniformMatrix4fv(
+            glGetUniformLocation(self.shader, "projection"),
+            1, GL_FALSE, projection_transform
+        )
+
+        self.modelMatrixLocation = glGetUniformLocation(self.shader, "model")
 
         self.mainLoop()
 
@@ -58,13 +76,37 @@ class App:
                 if event.type == pg.QUIT:
                     running = False
 
+            #обновление куба
+            self.cube.eulers[2] += 0.2
+            if self.cube.eulers[2] > 360:
+                self.cube.eulers[2] -= 360
+
             #обновление экрана
-            glClear(GL_COLOR_BUFFER_BIT)    #очистка экрана
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    #очистка экрана
 
             glUseProgram(self.shader)
             self.wood_texture.use()
-            glBindVertexArray(self.triangle.vao)
-            glDrawArrays(GL_TRIANGLES, 0, self.triangle.vertex_count)
+
+            model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+            #вращение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_eulers(
+                    eulers=np.radians(self.cube.eulers),
+                    dtype=np.float32
+                )
+            )
+            #передвижение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_translation(
+                    vec=self.cube.position,
+                    dtype=np.float32
+                )
+            )
+            glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+            glBindVertexArray(self.cube_mesh.vao)
+            glDrawArrays(GL_TRIANGLES, 0, self.cube_mesh.vertex_count)
 
             pg.display.flip()
 
@@ -72,24 +114,69 @@ class App:
         self.quit() #выход из приложения
 
     def quit(self):
-        self.triangle.destroy()
+        self.cube_mesh.destroy()
         self.wood_texture.destroy()
         glDeleteProgram(self.shader)
         pg.quit()
 
-class Triangle:
+class CubeMesh:
     def __init__(self):
 
-        #вершины - x, y, z, r, g, b, s, t
+        #вершины - x, y, z, s, t
         self.vertices = (
-            -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0,
-            0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0,
-            0.0, 0.5, 0.0, 0.0, 0.0, 1.0, 0.5, 0.0
+            -0.5, -0.5, -0.5, 0, 0,
+            0.5, -0.5, -0.5, 1, 0,
+            0.5, 0.5, -0.5, 1, 1,
+
+            0.5, 0.5, -0.5, 1, 1,
+            -0.5, 0.5, -0.5, 0, 1,
+            -0.5, -0.5, -0.5, 0, 0,
+
+            -0.5, -0.5, 0.5, 0, 0,
+            0.5, -0.5, 0.5, 1, 0,
+            0.5, 0.5, 0.5, 1, 1,
+
+            0.5, 0.5, 0.5, 1, 1,
+            -0.5, 0.5, 0.5, 0, 1,
+            -0.5, -0.5, 0.5, 0, 0,
+
+            -0.5, 0.5, 0.5, 1, 0,
+            -0.5, 0.5, -0.5, 1, 1,
+            -0.5, -0.5, -0.5, 0, 1,
+
+            -0.5, -0.5, -0.5, 0, 1,
+            -0.5, -0.5, 0.5, 0, 0,
+            -0.5, 0.5, 0.5, 1, 0,
+
+            0.5, 0.5, 0.5, 1, 0,
+            0.5, 0.5, -0.5, 1, 1,
+            0.5, -0.5, -0.5, 0, 1,
+
+            0.5, -0.5, -0.5, 0, 1,
+            0.5, -0.5, 0.5, 0, 0,
+            0.5, 0.5, 0.5, 1, 0,
+
+            -0.5, -0.5, -0.5, 0, 1,
+            0.5, -0.5, -0.5, 1, 1,
+            0.5, -0.5, 0.5, 1, 0,
+
+            0.5, -0.5, 0.5, 1, 0,
+            -0.5, -0.5, 0.5, 0, 0,
+            -0.5, -0.5, -0.5, 0, 1,
+
+            -0.5, 0.5, -0.5, 0, 1,
+            0.5, 0.5, -0.5, 1, 1,
+            0.5, 0.5, 0.5, 1, 0,
+
+            0.5, 0.5, 0.5, 1, 0,
+            -0.5, 0.5, 0.5, 0, 0,
+            -0.5, 0.5, -0.5, 0, 1
         )
 
-        self.vertices = np.array(self.vertices, dtype=np.float32)   #тип важен для правильного распознавания OpenGl
 
-        self.vertex_count = 3
+        self.vertex_count = len(self.vertices) // 5
+
+        self.vertices = np.array(self.vertices, dtype=np.float32)   #тип важен для правильного распознавания OpenGl
 
         self.vao = glGenVertexArrays(1) #vertex array - массив вершин
         glBindVertexArray(self.vao)
@@ -99,7 +186,7 @@ class Triangle:
 
         #атрибут 0 - позиция
         glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 20, ctypes.c_void_p(0))
         #0 - номер атрибута
         #3 - количество значений
         #тип значения
@@ -107,13 +194,9 @@ class Triangle:
         #количество байт для перехода к след. значению
         #смещение
 
-        #атрибут 1 - цвет
+        #атрибут 1 - позиция текстуры
         glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(12))
-
-        #атрибут 2 - позиция текстуры
-        glEnableVertexAttribArray(2)
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(24))
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 20, ctypes.c_void_p(12))
 
 
     #очистка памяти
@@ -122,11 +205,10 @@ class Triangle:
         glDeleteBuffers(1, (self.vbo,))
 
 class Cube:
-    def __init__(self, shader, material, position):
-        self.material = material
-        self.shader = shader
-        self.position = position
-
+    def __init__(self, position, eulers):
+        self.position = np.array(position, dtype=np.float32)
+        self.eulers = np.array(eulers, dtype=np.float32)
+'''
         glUseProgram(shader)
 
         #вершины - x, y, z, s, t, nx, ny, nz
@@ -196,7 +278,7 @@ class Cube:
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(12))
 
         glEnableVertexArrayAttrib(2)
-        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(20))
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(20))'''
 
 class Material:
     def __init__(self, filepath):
