@@ -6,8 +6,8 @@ from OpenGL.GL.shaders import compileProgram, compileShader
 import pyrr 
 from PIL import Image
 
-SCREEN_WIDTH = 640
-SCREEN_HEIGHT = 480
+SCREEN_WIDTH = 1640
+SCREEN_HEIGHT = 880
 RETURN_ACTION_CONTINUE = 0
 RETURN_ACTION_END = 1
 
@@ -118,7 +118,7 @@ class GraphicsEngine:
     def __init__(self):
         self.wood_texture = Material("gfx/wood.png")
         self.cat_texture = Material("gfx/cat.png")
-        self.cube_mesh = Mesh("models/glass.obj")
+        self.cube_mesh = Mesh("models/cube.obj")
         self.plane_mesh = Plane()
 
         #инициализация opengl
@@ -134,7 +134,7 @@ class GraphicsEngine:
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         projection_transform = pyrr.matrix44.create_perspective_projection(
-            fovy = 45, aspect = 640 / 480,
+            fovy = 45, aspect = SCREEN_WIDTH / SCREEN_HEIGHT,
             near = 0.1, far = 1000, dtype=np.float32
         )
 
@@ -145,6 +145,12 @@ class GraphicsEngine:
 
         self.modelMatrixLocation = glGetUniformLocation(self.shader, "model")
         self.viewMatrixLocation = glGetUniformLocation(self.shader, "view")
+        self.lightLocation = {
+            "position": [glGetUniformLocation(self.shader, f"Lights[{i}].position") for i in range(8)],
+            "color": [glGetUniformLocation(self.shader, f"Lights[{i}].color") for i in range(8)],
+            "strength": [glGetUniformLocation(self.shader, f"Lights[{i}].strength") for i in range(8)]
+        }
+        self.cameraPosLoc = glGetUniformLocation(self.shader, "cameraPosition")
 
     def createShader(self, vertexFilepath, fragmentFilepath):
         with open(vertexFilepath, 'r') as f:
@@ -170,6 +176,11 @@ class GraphicsEngine:
         
         glUniformMatrix4fv(self.viewMatrixLocation, 1, GL_FALSE, view_transform)
 
+        for i, light in enumerate(scene.lights):
+            glUniform3fv(self.lightLocation["position"][i], 1, light.position)
+            glUniform3fv(self.lightLocation["color"][i], 1, light.color)
+            glUniform1f(self.lightLocation["strength"][i], light.strength)
+        glUniform3fv(self.cameraPosLoc, 1, scene.camera.position)
 
         self.cat_texture.use()
         glBindVertexArray(self.plane_mesh.vao)
@@ -247,58 +258,109 @@ class Camera:
 class Scene:
     def __init__(self):
         self.planes = [
-            Obj3D(
-                position = [6, 0, -30],
-                eulers = [0, 0, 0]
-            ),
-            Obj3D(
-                position = [6, 0, 40],
-                eulers = [0, 0, 0]
-            ),
-            Obj3D(
-                position = [6, -10, -30],
-                eulers = [-90, 0, 0]
-            ),
-            Obj3D(
-                position = [6, 40, -30],
-                eulers = [-90, 0, 0]
-            ),
+            # Obj3D(
+            #     position = [6, 0, -30],
+            #     eulers = [0, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [6, 0, 40],
+            #     eulers = [0, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [6, -10, -30],
+            #     eulers = [-90, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [6, 40, -30],
+            #     eulers = [-90, 0, 0]
+            # ),
         ]
 
         self.cubes = [
             Obj3D(
-                position = [6, 0, 0],
+                position = [6, -5, 0],
                 eulers = [0, 0, 0]
             ),
             Obj3D(
-                position = [0, -3, -4],
+                position = [8, -3, 0],
                 eulers = [0, 0, 0]
             ),
             Obj3D(
-                position = [7, -3, 7],
+                position = [0, 0, 0],
                 eulers = [0, 0, 0]
             ),
-            Obj3D(
-                position = [16, 10, 10],
-                eulers = [1, 0, 0]
+            # Obj3D(
+            #     position = [0, -3, -4],
+            #     eulers = [0, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [7, -3, 7],
+            #     eulers = [0, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [16, 10, 10],
+            #     eulers = [1, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [10, -13, -140],
+            #     eulers = [-90, 0, 0]
+            # ),
+            # Obj3D(
+            #     position = [17, -13, -30],
+            #     eulers = [0, 0, 1]
+            # )
+        ]
+
+        self.lights = [
+            Light(
+                position=[6, 4, 3],
+                color=[1, 0, 0],
+                strength=20
             ),
-            Obj3D(
-                position = [10, -13, -140],
-                eulers = [-90, 0, 0]
+            Light(
+                position=[-10, 10, 0],
+                color=[0, 1, 0],
+                strength=20
             ),
-            Obj3D(
-                position = [17, -13, -30],
-                eulers = [0, 0, 1]
+            Light(
+                position=[16, 14, 13],
+                color=[1, 12, 100],
+                strength=20
+            ),
+            Light(
+                position=[-10, 10, 0],
+                color=[0, 1, 0],
+                strength=0
+            ),
+            Light(
+                position=[6, 4, 3],
+                color=[1, 0, 0],
+                strength=0
+            ),
+            Light(
+                position=[-10, 10, 0],
+                color=[0, 1, 0],
+                strength=0
+            ),
+            Light(
+                position=[16, 14, 13],
+                color=[1, 12, 0],
+                strength=0
+            ),
+            Light(
+                position=[-10, 10, 0],
+                color=[0, 1, 0],
+                strength=0
             )
         ]
 
-        self.camera = Camera(position=[-10, 0, 2])
+        self.camera = Camera(position=[0, 10, 12])
 
     def update(self, rate):
-        '''for cube in self.cubes:
+        for cube in self.cubes:
             cube.eulers[1] += 0.25 * rate
             if cube.eulers[1] > 360:
-                cube.eulers[1] -= 360'''
+                cube.eulers[1] -= 360
 
     def move_camera(self, dPos):
         dPos = np.array(dPos, dtype = np.float32)
@@ -339,6 +401,10 @@ class Mesh:
         #текстура
         glEnableVertexAttribArray(1)
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(12))
+
+        #нормаль
+        glEnableVertexAttribArray(2)
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(20))
 
     def loadMesh(self, filename: str) -> list[float]:
         v = []
@@ -474,6 +540,12 @@ class Plane:
     def destroy(self):
         glDeleteVertexArrays(1, (self.vao,))
         glDeleteBuffers(1, (self.vbo,))
+
+class Light:
+    def __init__(self, position, color, strength):
+        self.position = np.array(position, dtype=np.float32)
+        self.color = np.array(color, dtype=np.float32)
+        self.strength = strength
 
 if __name__ == "__main__":
     window = initialize_glfw()
