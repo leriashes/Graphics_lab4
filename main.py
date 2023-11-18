@@ -118,7 +118,7 @@ class GraphicsEngine:
     def __init__(self):
         self.wood_texture = Material("gfx/wood.png")
         self.cat_texture = Material("gfx/cat.png")
-        self.cube_mesh = Mesh("models/cube.obj")
+        self.cube_mesh = Mesh("models/glass.obj")
         self.plane_mesh = Plane()
 
         #инициализация opengl
@@ -282,7 +282,7 @@ class Scene:
                 eulers = [0, 0, 0]
             ),
             Obj3D(
-                position = [8, -3, 0],
+                position = [18, -3, 0],
                 eulers = [0, 0, 0]
             ),
             Obj3D(
@@ -318,13 +318,13 @@ class Scene:
                 strength=20
             ),
             Light(
-                position=[-10, 10, 0],
+                position=[-10, 10, 5],
                 color=[0, 1, 0],
                 strength=20
             ),
             Light(
-                position=[16, 14, 13],
-                color=[1, 12, 100],
+                position=[1, 14, 1],
+                color=[1, 12, 10],
                 strength=20
             ),
             Light(
@@ -354,13 +354,19 @@ class Scene:
             )
         ]
 
-        self.camera = Camera(position=[0, 10, 12])
+        self.camera = Camera(position=[0, 5, 12])
 
     def update(self, rate):
         for cube in self.cubes:
+            cube.eulers[0] += 0.25 * rate
             cube.eulers[1] += 0.25 * rate
+            cube.eulers[2] += 0.25 * rate
+            if cube.eulers[0] > 360:
+                cube.eulers[0] -= 360
             if cube.eulers[1] > 360:
                 cube.eulers[1] -= 360
+            if cube.eulers[2] > 360:
+                cube.eulers[2] -= 360
 
     def move_camera(self, dPos):
         dPos = np.array(dPos, dtype = np.float32)

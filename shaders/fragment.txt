@@ -21,7 +21,8 @@ vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentN
 
 void main()
 {
-    vec3 temp = vec3(0.0);
+    //окружающее освещение - ambient
+    vec3 temp += 0.2 * texture(imageTexture, fragmentTexCoord).rgb;
 
     for (int i = 0; i < 8; i++)
     {
@@ -42,9 +43,6 @@ vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentN
     fragLight = normalize(fragLight);
     vec3 fragCamera = normalize(cameraPosition - fragmentPosition);
     vec3 halfVec = normalize(fragLight + fragCamera);
-
-    //окружающее освещение - ambient
-    result += 0.2 * baseTexture;
 
     //рассеяное освещение - diffuse
     result += light.color * light.strength * max(0.0, dot(fragmentNormal, fragLight)) / (distance * distance)* baseTexture;
