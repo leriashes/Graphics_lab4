@@ -116,6 +116,17 @@ class App:
 
 class GraphicsEngine:
     def __init__(self):
+
+        #инициализация opengl
+        glClearColor(0.1, 0.2, 0.2, 1)  #цвет фона/очистки
+
+        glEnable(GL_DEPTH_TEST)
+
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+
+        #создание шейдера
         self.wood_texture = Material("gfx/wood.png")
         self.floor_texture = Material("gfx/floor.jpeg")
         self.cat_texture = Material("gfx/cat.png")
@@ -123,18 +134,134 @@ class GraphicsEngine:
         self.plane_mesh = Plane(10, 10, 1)
         self.floor_mesh = Plane(400, 400, 10)
 
-        #инициализация opengl
-        glClearColor(0.1, 0.2, 0.2, 1)  #цвет фона/очистки
+        shader = self.createShader("shaders/vertex.txt", "shaders/fragment.txt")
+        self.rendererObj = Renderer(shader)
 
-        #создание шейдера
-        self.shader = self.createShader("shaders/vertex.txt", "shaders/fragment.txt")        
+
+        self.light_mesh = Mesh("models/cube.obj")
+
+        shader = self.createShader("shaders/vertex_light.txt", "shaders/fragment_light.txt")
+        self.rendererLight = RendererLight(shader)
+
+    def createShader(self, vertexFilepath, fragmentFilepath):
+        with open(vertexFilepath, 'r') as f:
+            vertex_src = f.readlines()
+
+        with open(fragmentFilepath, 'r') as f:
+            fragment_src = f.readlines()
+
+        shader = compileProgram(compileShader(vertex_src, GL_VERTEX_SHADER), compileShader(fragment_src, GL_FRAGMENT_SHADER))
+
+        return shader
+    
+    def render(self, scene):
+        #обновление экрана
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    #очистка экрана
+
+        self.rendererObj.render(scene, self)
+        self.rendererLight.render(scene, self)
+
+        glFlush()
+
+
+        # glUseProgram(self.shader)
+
+        # view_transform = pyrr.matrix44.create_look_at(
+        #     eye = scene.camera.position, 
+        #     target = scene.camera.position + scene.camera.forwards,
+        #     up = scene.camera.up, dtype=np.float32)
+        
+        # glUniformMatrix4fv(self.viewMatrixLocation, 1, GL_FALSE, view_transform)
+
+        # for i, light in enumerate(scene.lights):
+        #     glUniform3fv(self.lightLocation["position"][i], 1, light.position)
+        #     glUniform3fv(self.lightLocation["color"][i], 1, light.color)
+        #     glUniform1f(self.lightLocation["strength"][i], light.strength)
+        # glUniform3fv(self.cameraPosLoc, 1, scene.camera.position)
+
+
+        # self.floor_texture.use()
+        # glBindVertexArray(self.floor_mesh.vao)
+
+        # model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+        # #вращение
+        # model_transform = pyrr.matrix44.multiply(
+        #     m1 = model_transform, 
+        #     m2 = pyrr.matrix44.create_from_eulers(
+        #         eulers=np.radians(scene.floor.eulers), dtype=np.float32
+        #     )
+        # )
+        # #передвижение
+        # model_transform = pyrr.matrix44.multiply(
+        #     m1 = model_transform, 
+        #     m2 = pyrr.matrix44.create_from_translation(
+        #         vec=np.array(scene.floor.position), dtype=np.float32
+        #     )
+        # )
+        # glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+        # glDrawArrays(GL_TRIANGLES, 0, self.floor_mesh.vertex_count)
+
+        # self.wood_texture.use()
+        # glBindVertexArray(self.cube_mesh.vao)
+
+        # for cube in scene.cubes:
+        #     model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+        #     #вращение
+        #     model_transform = pyrr.matrix44.multiply(
+        #         m1 = model_transform, 
+        #         m2 = pyrr.matrix44.create_from_eulers(
+        #             eulers=np.radians(cube.eulers), dtype=np.float32
+        #         )
+        #     )
+        #     #передвижение
+        #     model_transform = pyrr.matrix44.multiply(
+        #         m1 = model_transform, 
+        #         m2 = pyrr.matrix44.create_from_translation(
+        #             vec=np.array(cube.position), dtype=np.float32
+        #         )
+        #     )
+        #     glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+        #     glDrawArrays(GL_TRIANGLES, 0, self.cube_mesh.vertex_count)
+
+        # self.cat_texture.use()
+        # glBindVertexArray(self.plane_mesh.vao)
+
+        # for plane in scene.planes:
+        #     model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+        #     #вращение
+        #     model_transform = pyrr.matrix44.multiply(
+        #         m1 = model_transform, 
+        #         m2 = pyrr.matrix44.create_from_eulers(
+        #             eulers=np.radians(plane.eulers), dtype=np.float32
+        #         )
+        #     )
+        #     #передвижение
+        #     model_transform = pyrr.matrix44.multiply(
+        #         m1 = model_transform, 
+        #         m2 = pyrr.matrix44.create_from_translation(
+        #             vec=np.array(plane.position), dtype=np.float32
+        #         )
+        #     )
+        #     glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+        #     glDrawArrays(GL_TRIANGLES, 0, self.plane_mesh.vertex_count)
+
+
+
+        # glFlush()
+
+    def quit(self):
+        self.cube_mesh.destroy()
+        self.plane_mesh.destroy()
+        self.wood_texture.destroy()
+        self.cat_texture.destroy()
+        self.floor_texture.destroy()
+
+class Renderer:
+    def __init__(self, shader):
+        #инициализация opengl
+        self.shader = shader
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader, "imageTexture"), 0)
-
-        glEnable(GL_DEPTH_TEST)
-
-        glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         projection_transform = pyrr.matrix44.create_perspective_projection(
             fovy = 45, aspect = SCREEN_WIDTH / SCREEN_HEIGHT,
@@ -155,21 +282,7 @@ class GraphicsEngine:
         }
         self.cameraPosLoc = glGetUniformLocation(self.shader, "cameraPosition")
 
-    def createShader(self, vertexFilepath, fragmentFilepath):
-        with open(vertexFilepath, 'r') as f:
-            vertex_src = f.readlines()
-
-        with open(fragmentFilepath, 'r') as f:
-            fragment_src = f.readlines()
-
-        shader = compileProgram(compileShader(vertex_src, GL_VERTEX_SHADER), compileShader(fragment_src, GL_FRAGMENT_SHADER))
-
-        return shader
-    
-    def render(self, scene):
-        #обновление экрана
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    #очистка экрана
-
+    def render(self, scene, engine):
         glUseProgram(self.shader)
 
         view_transform = pyrr.matrix44.create_look_at(
@@ -183,11 +296,11 @@ class GraphicsEngine:
             glUniform3fv(self.lightLocation["position"][i], 1, light.position)
             glUniform3fv(self.lightLocation["color"][i], 1, light.color)
             glUniform1f(self.lightLocation["strength"][i], light.strength)
+
         glUniform3fv(self.cameraPosLoc, 1, scene.camera.position)
 
-
-        self.floor_texture.use()
-        glBindVertexArray(self.floor_mesh.vao)
+        engine.floor_texture.use()
+        glBindVertexArray(engine.floor_mesh.vao)
 
         model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
         #вращение
@@ -205,10 +318,10 @@ class GraphicsEngine:
             )
         )
         glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-        glDrawArrays(GL_TRIANGLES, 0, self.floor_mesh.vertex_count)
+        glDrawArrays(GL_TRIANGLES, 0, engine.floor_mesh.vertex_count)
 
-        self.wood_texture.use()
-        glBindVertexArray(self.cube_mesh.vao)
+        engine.wood_texture.use()
+        glBindVertexArray(engine.cube_mesh.vao)
 
         for cube in scene.cubes:
             model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
@@ -227,10 +340,10 @@ class GraphicsEngine:
                 )
             )
             glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-            glDrawArrays(GL_TRIANGLES, 0, self.cube_mesh.vertex_count)
+            glDrawArrays(GL_TRIANGLES, 0, engine.cube_mesh.vertex_count)
 
-        self.cat_texture.use()
-        glBindVertexArray(self.plane_mesh.vao)
+        engine.cat_texture.use()
+        glBindVertexArray(engine.plane_mesh.vao)
 
         for plane in scene.planes:
             model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
@@ -249,18 +362,70 @@ class GraphicsEngine:
                 )
             )
             glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-            glDrawArrays(GL_TRIANGLES, 0, self.plane_mesh.vertex_count)
+            glDrawArrays(GL_TRIANGLES, 0, engine.plane_mesh.vertex_count)
 
+    def destroy(self):
+        glDeleteProgram(self.shader)
 
+class RendererLight:
+    def __init__(self, shader):
+        #инициализация opengl
+        self.shader = shader
+        glUseProgram(self.shader)
+        glUniform1i(glGetUniformLocation(self.shader, "imageTexture"), 0)
 
-        glFlush()
+        projection_transform = pyrr.matrix44.create_perspective_projection(
+            fovy = 45, aspect = SCREEN_WIDTH / SCREEN_HEIGHT,
+            near = 0.1, far = 1000, dtype=np.float32
+        )
 
-    def quit(self):
-        self.cube_mesh.destroy()
-        self.plane_mesh.destroy()
-        self.wood_texture.destroy()
-        self.cat_texture.destroy()
-        self.floor_texture.destroy()
+        glUniformMatrix4fv(
+            glGetUniformLocation(self.shader, "projection"),
+            1, GL_FALSE, projection_transform
+        )
+
+        self.modelMatrixLocation = glGetUniformLocation(self.shader, "model")
+        self.viewMatrixLocation = glGetUniformLocation(self.shader, "view")
+        self.cameraPosLoc = glGetUniformLocation(self.shader, "cameraPosition")
+        self.tintLoc = glGetUniformLocation(self.shader, "tint")
+
+    def render(self, scene, engine):
+        glUseProgram(self.shader)
+
+        view_transform = pyrr.matrix44.create_look_at(
+            eye = scene.camera.position, 
+            target = scene.camera.position + scene.camera.forwards,
+            up = scene.camera.up, dtype=np.float32)
+        
+        glUniformMatrix4fv(self.viewMatrixLocation, 1, GL_FALSE, view_transform)
+
+        #engine.light_texture.use()
+        glBindVertexArray(engine.light_mesh.vao)
+
+        for light in scene.light_objects:
+            glUniform3fv(self.tintLoc, 1, light.light.color)
+
+            model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+            #вращение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_eulers(
+                    eulers=np.radians(light.eulers), dtype=np.float32
+                )
+            )
+            #передвижение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_translation(
+                    vec=np.array(light.position), dtype=np.float32
+                )
+            )
+            glUniformMatrix4fv(glGetUniformLocation(self.shader, "model"), 1, GL_FALSE, model_transform)
+            glDrawArrays(GL_TRIANGLES, 0, engine.light_mesh.vertex_count)
+
+        #glUniform3fv(self.cameraPosLoc, 1, scene.camera.position)
+
+    def destroy(self):
         glDeleteProgram(self.shader)
 
 class Camera:
@@ -385,6 +550,11 @@ class Scene:
             )
         ]
 
+        self.light_objects = [
+            LightObj(self.lights[i], eulers=[0, 0, 0]) for i in range(5)
+        ]
+
+
         self.floor = Obj3D(
                 position = [-20, -30, -20],
                 eulers = [-90, 0, 0]
@@ -420,6 +590,12 @@ class Obj3D:
     def __init__(self, position, eulers):
         self.position = np.array(position, dtype=np.float32)
         self.eulers = np.array(eulers, dtype=np.float32)
+
+class LightObj(Obj3D):
+    def __init__(self, light, eulers):
+        self.light = Light(light.position, light.color, light.strength)
+        self.position = light.position
+        self.eulers = eulers
 
 class Mesh:
     def __init__(self, filename):
