@@ -21,15 +21,17 @@ vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentN
 
 void main()
 {
+    vec4 baseTexture = texture(imageTexture, fragmentTexCoord);
+
     //окружающее освещение - ambient
-    vec3 temp += 0.2 * texture(imageTexture, fragmentTexCoord).rgb;
+    vec3 temp = 0.2 * baseTexture.rgb;
 
     for (int i = 0; i < 8; i++)
     {
         temp += calculatePointLight(Lights[i], fragmentPosition, fragmentNormal);
     }
 
-    color = vec4(temp, 1.0);
+    color = vec4(temp, baseTexture.a);
 }
 
 vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentNormal)
@@ -45,7 +47,7 @@ vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentN
     vec3 halfVec = normalize(fragLight + fragCamera);
 
     //рассеяное освещение - diffuse
-    result += light.color * light.strength * max(0.0, dot(fragmentNormal, fragLight)) / (distance * distance)* baseTexture;
+    result += light.color * light.strength * max(0.0, dot(fragmentNormal, fragLight)) / (distance * distance) * baseTexture;
 
     //блик - specular
     result += light.color * light.strength * pow(max(0.0, dot(fragmentNormal, halfVec)), 32) / (distance * distance);

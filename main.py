@@ -117,9 +117,11 @@ class App:
 class GraphicsEngine:
     def __init__(self):
         self.wood_texture = Material("gfx/wood.png")
+        self.floor_texture = Material("gfx/floor.jpeg")
         self.cat_texture = Material("gfx/cat.png")
-        self.cube_mesh = Mesh("models/glass.obj")
-        self.plane_mesh = Plane()
+        self.cube_mesh = Mesh("models/cube.obj")
+        self.plane_mesh = Plane(10, 10, 1)
+        self.floor_mesh = Plane(400, 400, 10)
 
         #инициализация opengl
         glClearColor(0.1, 0.2, 0.2, 1)  #цвет фона/очистки
@@ -129,8 +131,9 @@ class GraphicsEngine:
         glUseProgram(self.shader)
         glUniform1i(glGetUniformLocation(self.shader, "imageTexture"), 0)
 
-        glEnable(GL_BLEND)
         glEnable(GL_DEPTH_TEST)
+
+        glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         projection_transform = pyrr.matrix44.create_perspective_projection(
@@ -182,27 +185,27 @@ class GraphicsEngine:
             glUniform1f(self.lightLocation["strength"][i], light.strength)
         glUniform3fv(self.cameraPosLoc, 1, scene.camera.position)
 
-        self.cat_texture.use()
-        glBindVertexArray(self.plane_mesh.vao)
 
-        for plane in scene.planes:
-            model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
-            #вращение
-            model_transform = pyrr.matrix44.multiply(
-                m1 = model_transform, 
-                m2 = pyrr.matrix44.create_from_eulers(
-                    eulers=np.radians(plane.eulers), dtype=np.float32
-                )
+        self.floor_texture.use()
+        glBindVertexArray(self.floor_mesh.vao)
+
+        model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+        #вращение
+        model_transform = pyrr.matrix44.multiply(
+            m1 = model_transform, 
+            m2 = pyrr.matrix44.create_from_eulers(
+                eulers=np.radians(scene.floor.eulers), dtype=np.float32
             )
-            #передвижение
-            model_transform = pyrr.matrix44.multiply(
-                m1 = model_transform, 
-                m2 = pyrr.matrix44.create_from_translation(
-                    vec=np.array(plane.position), dtype=np.float32
-                )
+        )
+        #передвижение
+        model_transform = pyrr.matrix44.multiply(
+            m1 = model_transform, 
+            m2 = pyrr.matrix44.create_from_translation(
+                vec=np.array(scene.floor.position), dtype=np.float32
             )
-            glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-            glDrawArrays(GL_TRIANGLES, 0, self.plane_mesh.vertex_count)
+        )
+        glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+        glDrawArrays(GL_TRIANGLES, 0, self.floor_mesh.vertex_count)
 
         self.wood_texture.use()
         glBindVertexArray(self.cube_mesh.vao)
@@ -226,11 +229,38 @@ class GraphicsEngine:
             glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
             glDrawArrays(GL_TRIANGLES, 0, self.cube_mesh.vertex_count)
 
+        self.cat_texture.use()
+        glBindVertexArray(self.plane_mesh.vao)
+
+        for plane in scene.planes:
+            model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
+            #вращение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_eulers(
+                    eulers=np.radians(plane.eulers), dtype=np.float32
+                )
+            )
+            #передвижение
+            model_transform = pyrr.matrix44.multiply(
+                m1 = model_transform, 
+                m2 = pyrr.matrix44.create_from_translation(
+                    vec=np.array(plane.position), dtype=np.float32
+                )
+            )
+            glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
+            glDrawArrays(GL_TRIANGLES, 0, self.plane_mesh.vertex_count)
+
+
+
         glFlush()
 
     def quit(self):
         self.cube_mesh.destroy()
+        self.plane_mesh.destroy()
         self.wood_texture.destroy()
+        self.cat_texture.destroy()
+        self.floor_texture.destroy()
         glDeleteProgram(self.shader)
 
 class Camera:
@@ -258,12 +288,13 @@ class Camera:
 class Scene:
     def __init__(self):
         self.planes = [
+
             # Obj3D(
-            #     position = [6, 0, -30],
-            #     eulers = [0, 0, 0]
+            #     position = [6, -5, 4],
+            #     eulers = [-90, 0, 0]
             # ),
             # Obj3D(
-            #     position = [6, 0, 40],
+            #     position = [6, 0, 0],
             #     eulers = [0, 0, 0]
             # ),
             # Obj3D(
@@ -286,7 +317,7 @@ class Scene:
                 eulers = [0, 0, 0]
             ),
             Obj3D(
-                position = [0, 0, 0],
+                position = [-20, 0, 0],
                 eulers = [0, 0, 0]
             ),
             # Obj3D(
@@ -328,14 +359,14 @@ class Scene:
                 strength=20
             ),
             Light(
-                position=[-10, 10, 0],
-                color=[0, 1, 0],
-                strength=0
+                position=[20, 10, 0],
+                color=[0, 0, 5],
+                strength=200
             ),
             Light(
-                position=[6, 4, 3],
-                color=[1, 0, 0],
-                strength=0
+                position=[2, 5, 2],
+                color=[1, 1, 0],
+                strength=30
             ),
             Light(
                 position=[-10, 10, 0],
@@ -353,6 +384,11 @@ class Scene:
                 strength=0
             )
         ]
+
+        self.floor = Obj3D(
+                position = [-20, -30, -20],
+                eulers = [-90, 0, 0]
+                )
 
         self.camera = Camera(position=[0, 5, 12])
 
@@ -507,19 +543,21 @@ class Material:
         glDeleteTextures(1, (self.texture,))
 
 class Plane:
-    def __init__(self):
+    def __init__(self, w, h, k):
 
-        #вершины - x, y, z, r, g, b
+        #вершины - x, y, z, s, t, normal
         self.vertices = (
-            50.0, -50.0, 0.0, 0.0, 0.0, 0.0,
-            50.0, 50.0, 0.0, 0.0, 1.0, 0.0,
-            -50.0, 50.0, 0.0, 1.0, 1.0, 0.0,
-            -50.0, -50.0, 0.0, 1.0, 0.0, 0.0,
+            -w/2, h/2, 0, 0, 0, 0, 0, -1,
+            -w/2, -h/2, 0, 0, k, 0, 0, -1,
+            w/2, -h/2, 0, k, k, 0, 0, -1,
+            -w/2, h/2, 0, 0, 0, 0, 0, -1,
+            w/2, -h/2, 0, k, k, 0, 0, -1,
+            w/2, h/2, 0, k, 0, 0, 0, -1,
         )
 
-        self.vertices = np.array(self.vertices, dtype=np.float32)   #тип важен для правильного распознавания OpenGl
 
-        self.vertex_count = 3
+        self.vertex_count = len(self.vertices) // 8
+        self.vertices = np.array(self.vertices, dtype=np.float32)   #тип важен для правильного распознавания OpenGl
 
         self.vao = glGenVertexArrays(1) #vertex array - массив вершин
         glBindVertexArray(self.vao)
@@ -529,7 +567,7 @@ class Plane:
 
         #атрибут 0 - позиция
         glEnableVertexAttribArray(0)
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(0))
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
         #0 - номер атрибута
         #3 - количество точек
         #тип значения
@@ -539,8 +577,12 @@ class Plane:
 
         #атрибут 1 - цвет
         glEnableVertexAttribArray(1)
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(12))
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(12))
 
+
+        #нормаль
+        glEnableVertexAttribArray(2)
+        glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(20))
 
     #очистка памяти
     def destroy(self):
