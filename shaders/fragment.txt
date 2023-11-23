@@ -1,56 +1,71 @@
 #version 410 core
+#extension GL_ARB_separate_shader_objects : enable
 
 struct PointLight
 {
-    vec3 position;
     vec3 color;
     float strength;
 };
 
-in vec2 fragmentTexCoord;
-in vec3 fragmentPosition;
-in vec3 fragmentNormal;
+struct Material
+{
+    sampler2D albedo;
+    sampler2D ao;
+    sampler2D normal;
+    sampler2D specular;
+};
 
-uniform sampler2D imageTexture;
+layout (location=0) in vec3 fragmentPosition;
+layout (location=1) in vec2 fragmentTexCoord;
+layout (location=2) in vec3 fragmentViewPos;
+layout (location=3) in vec3 fragmentLightPos[8];
+
+uniform Material material;
 uniform PointLight Lights[8];
-uniform vec3 cameraPosition;
+uniform vec3 ambient;
 
-out vec4 color;
+layout (location=0) out vec4 color;
 
-vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentNormal);
+vec3 calculatePointLight(PointLight light, vec3 normal, vec3 lightPos);
 
 void main()
 {
-    vec4 baseTexture = texture(imageTexture, fragmentTexCoord);
+    vec3 normal = -normalize(vec3(1.0) - 2.0 * texture(material.normal, fragmentTexCoord).xyz);
 
     //окружающее освещение - ambient
-    vec3 temp = 0.2 * baseTexture.rgb;
-
+    //ambient
+    vec3 lightLevel = vec3(0.2) * vec3(texture(material.albedo, fragmentTexCoord));
+    //lightLevel = 100 * vec3(32.0, 8.0, 1.0);
+    lightLevel = lightLevel * texture(material.ao, fragmentTexCoord).xyz;
+    
     for (int i = 0; i < 8; i++)
     {
-        temp += calculatePointLight(Lights[i], fragmentPosition, fragmentNormal);
+        float distance = length(fragmentLightPos[i] - fragmentPosition);
+        lightLevel += calculatePointLight(Lights[i], normal, fragmentLightPos[i]) / (distance * distance);
+
+        //color = vec4(Lights[3].color, 1.0);
     }
 
-    color = vec4(temp, baseTexture.a);
+    color = vec4(lightLevel, 1.0);
+
+    
 }
 
-vec3 calculatePointLight(PointLight light, vec3 fragmentPosition, vec3 fragmentNormal)
+vec3 calculatePointLight(PointLight light, vec3 normal, vec3 lightPos)
 {
-    vec3 result = vec3(0.0);
-    vec3 baseTexture = texture(imageTexture, fragmentTexCoord).rgb;
+    vec3 result = vec3(0.0, 0.0, 0.0);
 
-    //геометрия
-    vec3 fragLight = light.position - fragmentPosition;
-    float distance = length(fragLight);
-    fragLight = normalize(fragLight);
-    vec3 fragCamera = normalize(cameraPosition - fragmentPosition);
-    vec3 halfVec = normalize(fragLight + fragCamera);
+    //направления
+    normal = normalize(normal);
+    vec3 lightDir = normalize(lightPos - fragmentPosition);
+    vec3 viewDir = normalize(fragmentViewPos - fragmentPosition);
+    vec3 halfVec = normalize(lightDir + viewDir);
 
     //рассеяное освещение - diffuse
-    result += light.color * light.strength * max(0.0, dot(fragmentNormal, fragLight)) / (distance * distance) * baseTexture;
+    result += max(0.0, dot(normal, lightDir)) * light.color * light.strength * vec3(texture(material.albedo, fragmentTexCoord));
 
     //блик - specular
-    result += light.color * light.strength * pow(max(0.0, dot(fragmentNormal, halfVec)), 32) / (distance * distance);
+    result += light.strength * pow(max(dot(normal, halfVec), 0.0), 32) * light.color * vec3(texture(material.specular, fragmentTexCoord));
 
     return result;
 }
