@@ -41,7 +41,7 @@ void main()
     for (int i = 0; i < 8; i++)
     {
         float distance = length(fragmentLightPos[i] - fragmentPosition);
-        lightLevel += calculatePointLight(Lights[i], normal, fragmentLightPos[i]) / (distance * distance);
+        lightLevel += calculatePointLight(Lights[i], normal, fragmentLightPos[i]) / distance;
 
         //color = vec4(Lights[3].color, 1.0);
     }

@@ -216,7 +216,7 @@ class Scene:
 
         self.lights = [
             Light(
-                position=[26, 4, -23],
+                position=[-20, 12, -20],
                 color=[1, 0, 0],
                 strength=20
             ),
@@ -228,12 +228,12 @@ class Scene:
             Light(
                 position=[21, 14, -21],
                 color=[1, 12, 10],
-                strength=12
+                strength=10
             ),
             Light(
                 position=[20, 10, 0],
                 color=[0, 0, 5],
-                strength=0
+                strength=20
             ),
             Light(
                 position=[2, 5, 2],
@@ -305,20 +305,20 @@ class Scene:
                 eulers = [0, 0, 0]
                 )
             ],
-            ENTITY_TYPE["FLOOR"]: [
-                Obj3D(
-                position = [-20, -20, -20],
-                eulers = [0, 0, 0]
-                ),
-                Obj3D(
-                position = [20, -20, -20],
-                eulers = [-90, -90, 0]
-                )
-            ],
+            # ENTITY_TYPE["FLOOR"]: [
+            #     Obj3D(
+            #     position = [-20, -20, -20],
+            #     eulers = [0, 0, 0]
+            #     ),
+            #     Obj3D(
+            #     position = [20, -20, -20],
+            #     eulers = [-90, -90, 0]
+            #     )
+            # ],
 
-            # ENTITY_TYPE["POINTLIGHT"]: [
-            #     LightObj(self.lights[i], eulers=[0, 0, 0]) for i in range(5)
-            # ]
+            ENTITY_TYPE["POINTLIGHT"]: [
+                LightObj(self.lights[i], eulers=[0, 0, 0]) for i in range(8)
+            ]
         }
 
         self.camera = Camera(position=[0, 3, 12])
@@ -517,7 +517,7 @@ class GraphicsEngine:
 
         for i in range(8):
             shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_COLOR"], f"Lights[{i}].color")
-            shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_POS"], f"lightPos[{i}].position")
+            shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_POS"], f"lightPos[{i}]")
             shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_STRENGTH"], f"Lights[{i}].strength")
 
         shader = self.shaders[1]
@@ -568,19 +568,39 @@ class GraphicsEngine:
 
             # self.storageBuffers[entityType].readFrom()
 
+            glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
 
+            if entityType != ENTITY_TYPE["POINTLIGHT"]:
             
-            self.materials[entityType].use()
-            
-            for entity in entities:
-                model = entity.getModelTransform()
-                glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
-                self.meshes[entityType].draw()
+                self.materials[entityType].use()
+                
+                for entity in entities:
+                    model = entity.getModelTransform()
+                    glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
+                    self.meshes[entityType].draw()
             ##self.meshes[entityType].drawInstanced(0, len(entities))
 
 
-        # shader = self.shaders[1]
-        # shader.use()
+        shader = self.shaders[1]
+        shader.use()
+
+
+        glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
+        mesh = self.meshes[ENTITY_TYPE["POINTLIGHT"]]
+
+        for entity in scene.entities[ENTITY_TYPE["POINTLIGHT"]]:
+
+            # if entityType not in self.storageBuffers:
+            #     continue
+
+            # self.storageBuffers[entityType].readFrom()
+
+            if entity.light.strength > 0:
+            
+                model = entity.getModelTransform()
+                glUniform3fv(shader.fetchSingleLoc(UNIFORM_TYPE["TINT"]), 1, entity.light.color)  
+                glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
+                mesh.draw()
 
         # glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
 
