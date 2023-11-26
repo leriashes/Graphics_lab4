@@ -13,6 +13,14 @@ ENTITY_TYPE = {
     "CARPET": 0,
     "POINTLIGHT": 1,
     "FLOOR": 2,
+
+    "FRUITBOWL": 5,
+    "FRUITPEARS": 6,
+    "TABLE": 7,
+    "TABLEFRAME": 8,
+    "TABLELEGS": 9,
+    "CHAIRS": 10,
+    "CHAIRS1": 11,
     "CUBE": 100,
     "GLASS": 200,
 }
@@ -159,81 +167,26 @@ class Camera:
 #сцена
 class Scene:
     def __init__(self):
-        # self.planes = [
-
-        #     # Obj3D(
-        #     #     position = [6, -5, 4],
-        #     #     eulers = [-90, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [6, 0, 0],
-        #     #     eulers = [0, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [6, -10, -30],
-        #     #     eulers = [-90, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [6, 40, -30],
-        #     #     eulers = [-90, 0, 0]
-        #     # ),
-        # ]
-
-        self.cubes = [
-            Obj3D(
-                position = [6, -5, 0],
-                eulers = [0, 0, 0]
-            ),
-        #     Obj3D(
-        #         position = [18, -3, 0],
-        #         eulers = [0, 0, 0]
-        #     ),
-        #     Obj3D(
-        #         position = [-20, 0, 0],
-        #         eulers = [0, 0, 0]
-        #     ),
-        #     # Obj3D(
-        #     #     position = [0, -3, -4],
-        #     #     eulers = [0, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [7, -3, 7],
-        #     #     eulers = [0, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [16, 10, 10],
-        #     #     eulers = [1, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [10, -13, -140],
-        #     #     eulers = [-90, 0, 0]
-        #     # ),
-        #     # Obj3D(
-        #     #     position = [17, -13, -30],
-        #     #     eulers = [0, 0, 1]
-        #     # )
-        ]
-
         self.lights = [
             Light(
                 position=[-20, 12, -20],
-                color=[1, 0, 0],
-                strength=20
+                color=[1, 1, 1],
+                strength=12
             ),
             Light(
                 position=[20, 10, -25],
-                color=[0, 1, 0],
-                strength=10
+                color=[1, 1, 1],
+                strength=2
             ),
             Light(
                 position=[21, 14, -21],
-                color=[1, 12, 10],
-                strength=10
+                color=[10, 12, 10],
+                strength=0
             ),
             Light(
                 position=[20, 10, 0],
-                color=[0, 0, 5],
-                strength=20
+                color=[10, 10, 15],
+                strength=0
             ),
             Light(
                 position=[2, 5, 2],
@@ -257,25 +210,11 @@ class Scene:
             )
         ]
 
-        # self.light_objects = [
-        #     LightObj(self.lights[i], eulers=[0, 0, 0]) for i in range(5)
-        # ]
-
-
-        # self.floor = Obj3D(
-        #         position = [-20, -20, -20],
-        #         eulers = [-90, 0, 0]
-        #         )
-        
-        # self.carpet = Obj3D(
-        #     position = [-10, -20, -20],
-        #     eulers = [0, 0, 0]
-        # )
 
         self.entities: dict[int, list[Obj3D]] = {
             ENTITY_TYPE["CARPET"]: [
                 Obj3D(
-                    position = [-10, -20, -20],
+                    position = [-20, -3, -20],
                     eulers = [0, 0, 0]
                 )
             ],
@@ -305,16 +244,55 @@ class Scene:
                 eulers = [0, 0, 0]
                 )
             ],
-            # ENTITY_TYPE["FLOOR"]: [
-            #     Obj3D(
-            #     position = [-20, -20, -20],
-            #     eulers = [0, 0, 0]
-            #     ),
-            #     Obj3D(
-            #     position = [20, -20, -20],
-            #     eulers = [-90, -90, 0]
-            #     )
-            # ],
+
+            ENTITY_TYPE["FRUITBOWL"]: [
+                Obj3D(
+                position = [-20, 0, -20],
+                eulers = [0, 0, 0]
+                ),
+            ],
+
+            ENTITY_TYPE["FRUITPEARS"]: [
+                Obj3D(
+                position = [-19.98, 0.26, -20.02],
+                eulers = [0, 0, 0]
+                ),
+            ],
+
+            ENTITY_TYPE["TABLE"]: [
+                Obj3D(
+                position = [-20, -0.26, -20],
+                eulers = [0, 0, 0]
+                ),
+            ],
+
+            ENTITY_TYPE["CHAIRS"]: [
+                Obj3D(
+                position = [-20, -0.26, -20],
+                eulers = [0, 0, 0]
+                ),
+            ],
+
+            ENTITY_TYPE["CHAIRS1"]: [
+                Obj3D(
+                position = [-20, -0.26, -20],
+                eulers = [0, 0, 0]
+                ),
+            ],
+
+            ENTITY_TYPE["TABLEFRAME"]: [
+                Obj3D(
+                position = [-20, -0.26, -20],
+                eulers = [0, 0, 0]
+                ),
+            ],
+
+            ENTITY_TYPE["TABLELEGS"]: [
+                Obj3D(
+                position = [-20, -1.56, -18.5],
+                eulers = [0, 0, 0]
+                ),
+            ],
 
             ENTITY_TYPE["POINTLIGHT"]: [
                 LightObj(self.lights[i], eulers=[0, 0, 0]) for i in range(8)
@@ -324,16 +302,7 @@ class Scene:
         self.camera = Camera(position=[0, 3, 12])
 
     def update(self, rate):
-        for cube in self.cubes:
-            cube.eulers[0] += 0.25 * rate
-            cube.eulers[1] += 0.25 * rate
-            cube.eulers[2] += 0.25 * rate
-            if cube.eulers[0] > 360:
-                cube.eulers[0] -= 360
-            if cube.eulers[1] > 360:
-                cube.eulers[1] -= 360
-            if cube.eulers[2] > 360:
-                cube.eulers[2] -= 360
+        pass
 
     def move_camera(self, dPos):
         dPos = np.array(dPos, dtype = np.float32)
@@ -405,9 +374,18 @@ class GraphicsEngine:
             ENTITY_TYPE["CUBE"]: ObjMesh("models/cube.obj"),
             ENTITY_TYPE["GLASS"]: ObjMesh("models/glass.obj"),
             ENTITY_TYPE["FLOOR"]: PlaneMesh(40, 40, 1),
+            ENTITY_TYPE["FRUITBOWL"]: ObjMesh("models/fruitbowl.obj"),
+            ENTITY_TYPE["FRUITPEARS"]: ObjMesh("models/fruitpears.obj"),
+            ENTITY_TYPE["TABLE"]: ObjMesh("models/table.obj"),
+            ENTITY_TYPE["TABLEFRAME"]: ObjMesh("models/tableframe.obj"),
+            ENTITY_TYPE["TABLELEGS"]: ObjMesh("models/tablelegs.obj"),
+            ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
+            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
         }
 
-        mt = Material3D("Carpet", "jpg")
+        mt = Material3D("Carpet", "jpg", "png")
+        tl = Material3D("TableFrame", "jpg", "jpg")
+        ch = Material3D("Chairs", "jpeg", "jpeg")
 
         self.materials: dict[int, Material] = {
             ENTITY_TYPE["CARPET"]: mt,
@@ -415,6 +393,13 @@ class GraphicsEngine:
             ENTITY_TYPE["GLASS"]: mt,
             ENTITY_TYPE["POINTLIGHT"]: mt,
             ENTITY_TYPE["FLOOR"]: mt,
+            ENTITY_TYPE["FRUITBOWL"]: Material3D("FruitBowl", "jpg", "jpg"),
+            ENTITY_TYPE["FRUITPEARS"]: Material3D("FruitPears", "jpg", "jpg"),
+            ENTITY_TYPE["TABLE"]: Material3D("Table", "jpg", "jpg"),
+            ENTITY_TYPE["TABLEFRAME"]: tl,
+            ENTITY_TYPE["TABLELEGS"]: tl,
+            ENTITY_TYPE["CHAIRS"]: ch,
+            ENTITY_TYPE["CHAIRS1"]: ch
         }
 
         self.storageBuffers: dict[int, Buffer] = {
@@ -861,14 +846,14 @@ class PlaneMesh(Mesh):
         self.vertices = []
         t = b = 0
         for i in range(self.vertex_count):
-            k = i * 8
+            m = i * 8
             if i % 3 == 0:
                 (t, b) = self.get_face_orientation(
-                    [[vertices[j] for j in range(k, k + 3)], [vertices[j] for j in range(k + 3, k + 5)]],
-                    [[vertices[j] for j in range(k + 8, k + 11)], [vertices[j] for j in range(k + 11, k + 13)]],
-                    [[vertices[j] for j in range(k + 16, k + 19)], [vertices[j] for j in range(k + 19, k + 21)]])
+                    [[vertices[j] for j in range(m, m + 3)], [vertices[j] for j in range(m + 3, m + 5)]],
+                    [[vertices[j] for j in range(m + 8, m + 11)], [vertices[j] for j in range(m + 11, m + 13)]],
+                    [[vertices[j] for j in range(m + 16, m + 19)], [vertices[j] for j in range(m + 19, m + 21)]])
             for j in range(8):
-                self.vertices.append(vertices[k + j])
+                self.vertices.append(vertices[m + j])
 
             for element in t:
                 self.vertices.append(element)
@@ -1035,8 +1020,9 @@ class ObjMesh(Mesh):
         dPos2 = pos3 - pos1
         dUV1 = uv2 - uv1
         dUV2 = uv3 - uv1
+        k = (dUV1[0] * dUV2[1] - dUV2[0] * dUV1[1])
 
-        den = 1 / (dUV1[0] * dUV2[1] - dUV2[0] * dUV1[1])
+        den = 1 / k
         tangent = [den * (dUV2[1] * dPos1[i] - dUV1[1] * dPos2[i]) for i in range(3)]
         bitangent = [den * (-dUV2[0] * dPos1[i] + dUV1[0] * dPos2[i]) for i in range(3)]
 
@@ -1096,11 +1082,11 @@ class Material2D(Material):
 
 #материал - из нескольких текстур
 class Material3D(Material):
-    def __init__(self, filename, filetype):
+    def __init__(self, filename, filetype, filetypeNRM):
         self.textures: list[Material2D] = [
             Material2D(f"gfx/{filename}/{filename}_COL.{filetype}", 0),
             Material2D(f"gfx/{filename}/{filename}_AO.{filetype}", 1),
-            Material2D(f"gfx/{filename}/{filename}_NRM.png", 2),
+            Material2D(f"gfx/{filename}/{filename}_NRM.{filetypeNRM}", 2),
             Material2D(f"gfx/{filename}/{filename}_GLOSS.{filetype}", 3),
         ]
 
