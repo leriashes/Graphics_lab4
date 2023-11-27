@@ -106,26 +106,26 @@ float calculateShadow(vec4 fragmentPosLightSpace)
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
 
-    // vec3 normal = -normalize(vec3(1.0) - 2.0 * texture(material.normal, fragmentTexCoord).xyz);
-    // vec3 lightDir = normalize(-10 * sun.direction - fragmentPosition);
-    // float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    vec3 normal = -normalize(vec3(1.0) - 2.0 * texture(material.normal, fragmentTexCoord).xyz);
+    vec3 lightDir = normalize(-10 * sun.direction - fragmentPosition);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
 
-    // float shadow = 0.0;
-    // vec2 texelsize = 1.0 / textureSize(shadowMap, 0);
-    // for (int x = -1; x <= 1; ++x)
-    // {
-    //     for (int y = -1; y <= 1; ++y)
-    //     {
-    //         float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelsize).r;
-    //         shadow += d2 - bias > pcfDepth ? 1.0 : 0.0;
-    //     }
-    // }
-    // shadow /= 9.0;
-    // if (projCoords.z > 1.0) {
-    //     shadow = 0.0;
-    // }
+    float shadow = 0.0;
+    vec2 texelsize = 1.0 / textureSize(shadowMap, 0);
+    for (int x = -1; x <= 1; ++x)
+    {
+        for (int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelsize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 5.0;
+    if (projCoords.z > 1.0) {
+        shadow = 0.0;
+    }
 
-    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+    //float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
 
     return shadow;
 }

@@ -170,7 +170,7 @@ class Scene:
             Light(
                 position=[0, 12, -2],
                 color=[1, 1, 1],
-                strength=5
+                strength=0
             ),
             Light(
                 position=[20, 10, -25],
@@ -225,12 +225,12 @@ class Scene:
                 ),
             ],
 
-            # ENTITY_TYPE["FRUITPEARS"]: [
-            #     Obj3D(
-            #     position = [-19.98, 0.26, -20.02],
-            #     eulers = [0, 0, 0]
-            #     ),
-            # ],
+            ENTITY_TYPE["FRUITPEARS"]: [
+                Obj3D(
+                position = [0.02, 0.26, -0.02],
+                eulers = [0, 0, 0]
+                ),
+            ],
 
             ENTITY_TYPE["TABLE"]: [
                 Obj3D(
@@ -241,7 +241,7 @@ class Scene:
 
             ENTITY_TYPE["FLOOR"]: [
                 Obj3D(
-                position = [0, -10, 0],
+                position = [0, -3, 0],
                 eulers = [-90, 0, 0]
                 ),
             ],
@@ -254,19 +254,19 @@ class Scene:
             #     ),
             # ],
 
-            # ENTITY_TYPE["CHAIRS1"]: [
-            #     Obj3D(
-            #     position = [-20, -0.26, -20],
-            #     eulers = [0, 0, 0]
-            #     ),
-            # ],
+            ENTITY_TYPE["CHAIRS1"]: [
+                Obj3D(
+                position = [0, -0.26, 0],
+                eulers = [0, 0, 0]
+                ),
+            ],
 
-            # ENTITY_TYPE["TABLEFRAME"]: [
-            #     Obj3D(
-            #     position = [-20, -0.26, -20],
-            #     eulers = [0, 0, 0]
-            #     ),
-            # ],
+            ENTITY_TYPE["TABLEFRAME"]: [
+                Obj3D(
+                position = [-20, -0.26, -20],
+                eulers = [0, 0, 0]
+                ),
+            ],
 
             ENTITY_TYPE["TABLELEGS"]: [
                 Obj3D(
@@ -356,7 +356,7 @@ class GraphicsEngine:
             ENTITY_TYPE["TABLEFRAME"]: ObjMesh("models/tableframe.obj"),
             ENTITY_TYPE["TABLELEGS"]: ObjMesh("models/tablelegs.obj"),
             # ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
-            # ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
+            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
         }
 
         mt = Material3D("Carpet", "jpg", "png")
@@ -373,7 +373,7 @@ class GraphicsEngine:
             ENTITY_TYPE["TABLEFRAME"]: tl,
             ENTITY_TYPE["TABLELEGS"]: tl,
             # ENTITY_TYPE["CHAIRS"]: ch,
-            # ENTITY_TYPE["CHAIRS1"]: ch
+            ENTITY_TYPE["CHAIRS1"]: ch
         }
 
         self.shaders: dict[int, Shader] = {
@@ -426,7 +426,7 @@ class GraphicsEngine:
         
         glUniform3fv(
             glGetUniformLocation(shader.prog,"sun.direction"), 
-            1, np.array([-1, -15, -1],dtype=np.float32))
+            1, np.array([-1, -2, -1],dtype=np.float32))
         
         glUniform3fv(
             glGetUniformLocation(shader.prog,"sun.color"), 
@@ -487,7 +487,7 @@ class GraphicsEngine:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         lightProjection = pyrr.matrix44.create_orthogonal_projection(-10, 10, -10, 10, 0.1, 100, dtype=np.float32)
-        lightPosition = 10 * np.array([-0.2, 0.4, -0.1], dtype=np.float32)
+        lightPosition = np.array([-4, 10, 1], dtype=np.float32)
         lookTarget = np.array([0,0,0], dtype=np.float32)
         globalUp = np.array([0,1,0], dtype=np.float32)
         lightView = pyrr.matrix44.create_look_at(lightPosition, lookTarget, globalUp, dtype=np.float32)
