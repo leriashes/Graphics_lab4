@@ -21,8 +21,6 @@ ENTITY_TYPE = {
     "TABLELEGS": 9,
     "CHAIRS": 10,
     "CHAIRS1": 11,
-    "CUBE": 100,
-    "GLASS": 200,
 }
 
 UNIFORM_TYPE = {
@@ -35,6 +33,7 @@ UNIFORM_TYPE = {
     "LIGHT_STRENGTH": 6,
     "TINT": 7,
     "MODEL": 8,
+    "LIGHT_SPTRANS": 9,
 }
 
 def initialize_glfw():
@@ -92,7 +91,7 @@ class App:
             self.handleKeys()
             self.handleMouse()
             glfw.poll_events()
-            self.scene.update(self.frameTime / 16.7)
+            #self.scene.update(self.frameTime / 16.7)
             self.renderer.render(self.scene)
             self.calculateFramerate()
         self.quit() #выход из приложения
@@ -169,14 +168,14 @@ class Scene:
     def __init__(self):
         self.lights = [
             Light(
-                position=[-20, 12, -20],
+                position=[0, 12, -2],
                 color=[1, 1, 1],
-                strength=12
+                strength=5
             ),
             Light(
                 position=[20, 10, -25],
                 color=[1, 1, 1],
-                strength=2
+                strength=0
             ),
             Light(
                 position=[21, 14, -21],
@@ -214,82 +213,64 @@ class Scene:
         self.entities: dict[int, list[Obj3D]] = {
             ENTITY_TYPE["CARPET"]: [
                 Obj3D(
-                    position = [-20, -3, -20],
+                    position = [0, -3, 0],
                     eulers = [0, 0, 0]
-                )
-            ],
-
-            ENTITY_TYPE["CUBE"]: [
-                Obj3D(
-                 position = [0, 0, 0],
-                 eulers = [0, 0, 0]
-                ),
-                Obj3D(
-                    position = [18, -3, 0],
-                    eulers = [0, 0, 0]
-                ),
-                Obj3D(
-                    position = [-20, 0, 0],
-                    eulers = [0, 0, 0]
-                ),
-            ],
-
-            ENTITY_TYPE["GLASS"]: [
-                Obj3D(
-                position = [-20, -20, -20],
-                eulers = [-90, 0, 0]
-                ),
-                Obj3D(
-                position = [0, 0, -20],
-                eulers = [0, 0, 0]
                 )
             ],
 
             ENTITY_TYPE["FRUITBOWL"]: [
                 Obj3D(
-                position = [-20, 0, -20],
+                position = [0, 0.1, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
 
-            ENTITY_TYPE["FRUITPEARS"]: [
-                Obj3D(
-                position = [-19.98, 0.26, -20.02],
-                eulers = [0, 0, 0]
-                ),
-            ],
+            # ENTITY_TYPE["FRUITPEARS"]: [
+            #     Obj3D(
+            #     position = [-19.98, 0.26, -20.02],
+            #     eulers = [0, 0, 0]
+            #     ),
+            # ],
 
             ENTITY_TYPE["TABLE"]: [
                 Obj3D(
-                position = [-20, -0.26, -20],
+                position = [0, -0.26, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
 
-            ENTITY_TYPE["CHAIRS"]: [
+            ENTITY_TYPE["FLOOR"]: [
                 Obj3D(
-                position = [-20, -0.26, -20],
-                eulers = [0, 0, 0]
+                position = [0, -10, 0],
+                eulers = [-90, 0, 0]
                 ),
             ],
 
-            ENTITY_TYPE["CHAIRS1"]: [
-                Obj3D(
-                position = [-20, -0.26, -20],
-                eulers = [0, 0, 0]
-                ),
-            ],
 
-            ENTITY_TYPE["TABLEFRAME"]: [
-                Obj3D(
-                position = [-20, -0.26, -20],
-                eulers = [0, 0, 0]
-                ),
-            ],
+            # ENTITY_TYPE["CHAIRS"]: [
+            #     Obj3D(
+            #     position = [-20, -0.26, -20],
+            #     eulers = [0, 0, 0]
+            #     ),
+            # ],
+
+            # ENTITY_TYPE["CHAIRS1"]: [
+            #     Obj3D(
+            #     position = [-20, -0.26, -20],
+            #     eulers = [0, 0, 0]
+            #     ),
+            # ],
+
+            # ENTITY_TYPE["TABLEFRAME"]: [
+            #     Obj3D(
+            #     position = [-20, -0.26, -20],
+            #     eulers = [0, 0, 0]
+            #     ),
+            # ],
 
             ENTITY_TYPE["TABLELEGS"]: [
                 Obj3D(
-                position = [-20, -1.56, -18.5],
+                position = [0, -1.56, 1.5],
                 eulers = [0, 0, 0]
                 ),
             ],
@@ -300,9 +281,6 @@ class Scene:
         }
 
         self.camera = Camera(position=[0, 3, 12])
-
-    def update(self, rate):
-        pass
 
     def move_camera(self, dPos):
         dPos = np.array(dPos, dtype = np.float32)
@@ -371,16 +349,14 @@ class GraphicsEngine:
         self.meshes: dict[int, Mesh] = {
             ENTITY_TYPE["CARPET"]: ObjMesh("models/carpet.obj"),
             ENTITY_TYPE["POINTLIGHT"]: ObjMesh("models/cube.obj"),
-            ENTITY_TYPE["CUBE"]: ObjMesh("models/cube.obj"),
-            ENTITY_TYPE["GLASS"]: ObjMesh("models/glass.obj"),
-            ENTITY_TYPE["FLOOR"]: PlaneMesh(40, 40, 1),
+            ENTITY_TYPE["FLOOR"]: PlaneMesh(400, 400, 50),
             ENTITY_TYPE["FRUITBOWL"]: ObjMesh("models/fruitbowl.obj"),
             ENTITY_TYPE["FRUITPEARS"]: ObjMesh("models/fruitpears.obj"),
             ENTITY_TYPE["TABLE"]: ObjMesh("models/table.obj"),
             ENTITY_TYPE["TABLEFRAME"]: ObjMesh("models/tableframe.obj"),
             ENTITY_TYPE["TABLELEGS"]: ObjMesh("models/tablelegs.obj"),
-            ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
-            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
+            # ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
+            # ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
         }
 
         mt = Material3D("Carpet", "jpg", "png")
@@ -389,70 +365,46 @@ class GraphicsEngine:
 
         self.materials: dict[int, Material] = {
             ENTITY_TYPE["CARPET"]: mt,
-            ENTITY_TYPE["CUBE"]: mt,
-            ENTITY_TYPE["GLASS"]: mt,
             ENTITY_TYPE["POINTLIGHT"]: mt,
-            ENTITY_TYPE["FLOOR"]: mt,
+            ENTITY_TYPE["FLOOR"]: Material3D("Floor", "jpg", "jpg"),
             ENTITY_TYPE["FRUITBOWL"]: Material3D("FruitBowl", "jpg", "jpg"),
             ENTITY_TYPE["FRUITPEARS"]: Material3D("FruitPears", "jpg", "jpg"),
             ENTITY_TYPE["TABLE"]: Material3D("Table", "jpg", "jpg"),
             ENTITY_TYPE["TABLEFRAME"]: tl,
             ENTITY_TYPE["TABLELEGS"]: tl,
-            ENTITY_TYPE["CHAIRS"]: ch,
-            ENTITY_TYPE["CHAIRS1"]: ch
-        }
-
-        self.storageBuffers: dict[int, Buffer] = {
-            ENTITY_TYPE["CARPET"]: Buffer(
-                size = 1024, binding = 0,
-                element_count = 16, dtype = np.float32
-            ),
-            ENTITY_TYPE["CUBE"]: Buffer(
-                size = 1024, binding = 1,
-                element_count = 16, dtype = np.float32
-            ),
-            ENTITY_TYPE["GLASS"]: Buffer(
-                size = 1024, binding = 2,
-                element_count = 16, dtype = np.float32
-            ),
-            ENTITY_TYPE["POINTLIGHT"]: Buffer(
-                size = 1024, binding = 3,
-                element_count = 16, dtype = np.float32
-            ),
-            ENTITY_TYPE["FLOOR"]: Buffer(
-                size = 1024, binding = 4,
-                element_count = 16, dtype = np.float32
-            ),
+            # ENTITY_TYPE["CHAIRS"]: ch,
+            # ENTITY_TYPE["CHAIRS1"]: ch
         }
 
         self.shaders: dict[int, Shader] = {
             0: Shader("vertex.txt", "fragment.txt"),
             1: Shader("vertex_light.txt", "fragment_light.txt"),
+            2: Shader("vertex_lightmap.txt", "fragment_lightmap.txt")
         }
 
         self.setOnetimeUnifs()
         self.getUnifsLocs()
 
-        # self.wood_texture = Material("gfx/wood.png")
-        # self.floor_texture = Material("gfx/floor.jpeg")
-        # self.cat_texture = Material("gfx/cat.png")
-        # self.carpet_texture = Material("gfx/Carpet_COL.jpg")
-        # self.cube_mesh = Mesh("models/glass.obj")
-        # self.carpet_mesh = Mesh("models/carpet.obj")
-        # self.plane_mesh = Plane(10, 10, 1)
-        # self.floor_mesh = Plane(400, 400, 50)
-
-
-        #создание шейдера
-        # shader = self.createShader("shaders/vertex.txt", "shaders/fragment.txt")
-        # self.rendererObj = Renderer(self.shaders[0])
-
-
-        # self.light_mesh = Mesh("models/cube.obj")
-
-        # shader = self.createShader("shaders/vertex_light.txt", "shaders/fragment_light.txt")
-        # self.rendererLight = RendererLight(self.shaders[1])
+        self.shadowMapRes = 1024
+        self.makeShadowMap()
     
+    def makeShadowMap(self):
+        self.depthMapFBO = glGenFramebuffers(1)
+        self.depthMap = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, self.depthMap)
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, self.shadowMapRes, self.shadowMapRes, 0, GL_DEPTH_COMPONENT, GL_FLOAT, None)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER)
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
+
+        glBindFramebuffer(GL_FRAMEBUFFER, self.depthMapFBO)
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, self.depthMap, 0)
+        glDrawBuffer(GL_NONE)
+        glReadBuffer(GL_NONE)
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
     def setOnetimeUnifs(self):
 
         projection_transform = pyrr.matrix44.create_perspective_projection(
@@ -471,6 +423,14 @@ class GraphicsEngine:
         glUniform3fv(
             glGetUniformLocation(shader.prog,"ambient"), 
             1, np.array([0.1, 0.1, 0.1],dtype=np.float32))
+        
+        glUniform3fv(
+            glGetUniformLocation(shader.prog,"sun.direction"), 
+            1, np.array([-1, -15, -1],dtype=np.float32))
+        
+        glUniform3fv(
+            glGetUniformLocation(shader.prog,"sun.color"), 
+            1, np.array([0.8, 0.8, 0.8],dtype=np.float32))
 
         glUniform1i(
             glGetUniformLocation(shader.prog, "material.albedo"), 0)
@@ -483,6 +443,9 @@ class GraphicsEngine:
 
         glUniform1i(
             glGetUniformLocation(shader.prog, "material.specular"), 3)
+        
+        glUniform1i(
+            glGetUniformLocation(shader.prog, "shadowMap"), 4)
         
         shader = self.shaders[1]
         shader.use()
@@ -499,11 +462,12 @@ class GraphicsEngine:
         shader.cacheSingleLoc(UNIFORM_TYPE["VIEW"], "view")
         shader.cacheSingleLoc(UNIFORM_TYPE["CAMERA_POS"], "cameraPos")
         shader.cacheSingleLoc(UNIFORM_TYPE["MODEL"], "model")
+        shader.cacheSingleLoc(UNIFORM_TYPE["LIGHT_SPTRANS"], "lightSpaceTransform")
 
         for i in range(8):
-            shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_COLOR"], f"Lights[{i}].color")
+            shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_COLOR"], f"lights[{i}].color")
             shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_POS"], f"lightPos[{i}]")
-            shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_STRENGTH"], f"Lights[{i}].strength")
+            shader.cacheMultiLoc(UNIFORM_TYPE["LIGHT_STRENGTH"], f"lights[{i}].strength")
 
         shader = self.shaders[1]
         shader.use()
@@ -512,23 +476,49 @@ class GraphicsEngine:
         shader.cacheSingleLoc(UNIFORM_TYPE["VIEW"], "view")
         shader.cacheSingleLoc(UNIFORM_TYPE["TINT"], "color")
 
+        shader = self.shaders[2]
+        shader.use()
+
+        shader.cacheSingleLoc(UNIFORM_TYPE["LIGHT_SPTRANS"], "lightSpaceTransform")
+        shader.cacheSingleLoc(UNIFORM_TYPE["MODEL"], "model")
+
     def render(self, scene):
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        lightProjection = pyrr.matrix44.create_orthogonal_projection(-10, 10, -10, 10, 0.1, 100, dtype=np.float32)
+        lightPosition = 10 * np.array([-0.2, 0.4, -0.1], dtype=np.float32)
+        lookTarget = np.array([0,0,0], dtype=np.float32)
+        globalUp = np.array([0,1,0], dtype=np.float32)
+        lightView = pyrr.matrix44.create_look_at(lightPosition, lookTarget, globalUp, dtype=np.float32)
+        lightSpaceTransform = pyrr.matrix44.multiply(lightView, lightProjection)
+
+        shader = self.shaders[2]
+        shader.use()
+
+        glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["LIGHT_SPTRANS"]), 1, GL_FALSE, lightSpaceTransform)
+
+        glViewport(0, 0, self.shadowMapRes, self.shadowMapRes)
+        glBindFramebuffer(GL_FRAMEBUFFER, self.depthMapFBO)
+        glClear(GL_DEPTH_BUFFER_BIT)
+
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, self.depthMap)
+
+
         for entityType, entities in scene.entities.items():
-            if entityType not in self.storageBuffers:
-                continue
-            
-            storage_buffer = self.storageBuffers[entityType]
-            for i, entity in enumerate(entities):
-                model = entity.getModelTransform().reshape(16)
-                storage_buffer.recordElem(i, model)
 
-                #glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model)  
-                #glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-                #glDrawArrays(GL_TRIANGLES, 0, self.floor_mesh.vertex_count)
-                #glUniformMatrix4fv(entity.getModelTransform(), 1, GL_FALSE, model_transform)
+            if entityType != ENTITY_TYPE["POINTLIGHT"]:
 
-        #обновление экрана
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)    #очистка экрана
+                self.materials[entityType].use()
+                
+                for entity in entities:
+                    model = entity.getModelTransform()
+                    glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
+                    self.meshes[entityType].draw()
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
 
         view_transform = pyrr.matrix44.create_look_at(
             eye = scene.camera.position, 
@@ -537,6 +527,10 @@ class GraphicsEngine:
 
         shader = self.shaders[0]
         shader.use()
+
+        glViewport(0, 0, SCREEN_WIDTH * 2, SCREEN_HEIGHT * 2)
+        glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["LIGHT_SPTRANS"]), 1, GL_FALSE, lightSpaceTransform)
+
 
         glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
         glUniform3fv(shader.fetchSingleLoc(UNIFORM_TYPE["CAMERA_POS"]), 1, scene.camera.position)     
@@ -548,141 +542,41 @@ class GraphicsEngine:
 
         for entityType, entities in scene.entities.items():
 
-            # if entityType not in self.storageBuffers:
-            #     continue
-
-            # self.storageBuffers[entityType].readFrom()
-
             glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
 
             if entityType != ENTITY_TYPE["POINTLIGHT"]:
             
                 self.materials[entityType].use()
+
+
+                glActiveTexture(GL_TEXTURE4)
+                glBindTexture(GL_TEXTURE_2D, self.depthMap)
                 
                 for entity in entities:
                     model = entity.getModelTransform()
                     glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
                     self.meshes[entityType].draw()
-            ##self.meshes[entityType].drawInstanced(0, len(entities))
 
 
-        shader = self.shaders[1]
-        shader.use()
+        # shader = self.shaders[1]
+        # shader.use()
 
-
-        glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
-        mesh = self.meshes[ENTITY_TYPE["POINTLIGHT"]]
-
-        for entity in scene.entities[ENTITY_TYPE["POINTLIGHT"]]:
-
-            # if entityType not in self.storageBuffers:
-            #     continue
-
-            # self.storageBuffers[entityType].readFrom()
-
-            if entity.light.strength > 0:
-            
-                model = entity.getModelTransform()
-                glUniform3fv(shader.fetchSingleLoc(UNIFORM_TYPE["TINT"]), 1, entity.light.color)  
-                glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
-                mesh.draw()
 
         # glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["VIEW"]), 1, GL_FALSE, view_transform)
-
         # mesh = self.meshes[ENTITY_TYPE["POINTLIGHT"]]
-        # glBindVertexArray(mesh.vao)
+
+        # for entity in scene.entities[ENTITY_TYPE["POINTLIGHT"]]:
 
 
-        # self.rendererObj.render(scene, self)
-        # self.rendererLight.render(scene, self)
+        #     if entity.light.strength > 0:
+            
+        #         model = entity.getModelTransform()
+        #         glUniform3fv(shader.fetchSingleLoc(UNIFORM_TYPE["TINT"]), 1, entity.light.color)  
+        #         glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["MODEL"]), 1, GL_FALSE, model)  
+        #         mesh.draw()
+
 
         glFlush()
-
-
-        # glUseProgram(self.shader)
-
-        # view_transform = pyrr.matrix44.create_look_at(
-        #     eye = scene.camera.position, 
-        #     target = scene.camera.position + scene.camera.forwards,
-        #     up = scene.camera.up, dtype=np.float32)
-        
-        # glUniformMatrix4fv(self.viewMatrixLocation, 1, GL_FALSE, view_transform)
-
-        # for i, light in enumerate(scene.lights):
-        #     glUniform3fv(self.lightLocation["position"][i], 1, light.position)
-        #     glUniform3fv(self.lightLocation["color"][i], 1, light.color)
-        #     glUniform1f(self.lightLocation["strength"][i], light.strength)
-        # glUniform3fv(self.cameraPosLoc, 1, scene.camera.position)
-
-
-        # self.floor_texture.use()
-        # glBindVertexArray(self.floor_mesh.vao)
-
-        # model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
-        # #вращение
-        # model_transform = pyrr.matrix44.multiply(
-        #     m1 = model_transform, 
-        #     m2 = pyrr.matrix44.create_from_eulers(
-        #         eulers=np.radians(scene.floor.eulers), dtype=np.float32
-        #     )
-        # )
-        # #передвижение
-        # model_transform = pyrr.matrix44.multiply(
-        #     m1 = model_transform, 
-        #     m2 = pyrr.matrix44.create_from_translation(
-        #         vec=np.array(scene.floor.position), dtype=np.float32
-        #     )
-        # )
-        # glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-        # glDrawArrays(GL_TRIANGLES, 0, self.floor_mesh.vertex_count)
-
-        # self.wood_texture.use()
-        # glBindVertexArray(self.cube_mesh.vao)
-
-        # for cube in scene.cubes:
-        #     model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
-        #     #вращение
-        #     model_transform = pyrr.matrix44.multiply(
-        #         m1 = model_transform, 
-        #         m2 = pyrr.matrix44.create_from_eulers(
-        #             eulers=np.radians(cube.eulers), dtype=np.float32
-        #         )
-        #     )
-        #     #передвижение
-        #     model_transform = pyrr.matrix44.multiply(
-        #         m1 = model_transform, 
-        #         m2 = pyrr.matrix44.create_from_translation(
-        #             vec=np.array(cube.position), dtype=np.float32
-        #         )
-        #     )
-        #     glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-        #     glDrawArrays(GL_TRIANGLES, 0, self.cube_mesh.vertex_count)
-
-        # self.cat_texture.use()
-        # glBindVertexArray(self.plane_mesh.vao)
-
-        # for plane in scene.planes:
-        #     model_transform = pyrr.matrix44.create_identity(dtype=np.float32)
-        #     #вращение
-        #     model_transform = pyrr.matrix44.multiply(
-        #         m1 = model_transform, 
-        #         m2 = pyrr.matrix44.create_from_eulers(
-        #             eulers=np.radians(plane.eulers), dtype=np.float32
-        #         )
-        #     )
-        #     #передвижение
-        #     model_transform = pyrr.matrix44.multiply(
-        #         m1 = model_transform, 
-        #         m2 = pyrr.matrix44.create_from_translation(
-        #             vec=np.array(plane.position), dtype=np.float32
-        #         )
-        #     )
-        #     glUniformMatrix4fv(self.modelMatrixLocation, 1, GL_FALSE, model_transform)
-        #     glDrawArrays(GL_TRIANGLES, 0, self.plane_mesh.vertex_count)
-
-
-
-        # glFlush()
 
     def quit(self):
         for mesh in self.meshes.values():
@@ -694,8 +588,8 @@ class GraphicsEngine:
         for shader in self.shaders.values():
             shader.destroy()
 
-        for buffer in self.storageBuffers.values():
-            buffer.destroy()
+        glDeleteTextures(1, [self.depthMap,])
+        glDeleteFramebuffers(1, [self.depthMapFBO,])
 
 class Shader:
     def __init__(self, vertexFilepath, fragmentFilepath):
@@ -739,72 +633,6 @@ class Shader:
     def destroy(self):
         glDeleteProgram(self.prog)
 
-class Buffer:
-    def __init__(self, size, binding, element_count, dtype):
-        self.size = size
-        self.binding = binding
-        self.element_count = element_count
-        self.dtype = dtype
-
-        self.hostMem = np.zeros(element_count * size, dtype = dtype)
-        self.deviceMem = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, self.deviceMem)
-        glBufferData(GL_ARRAY_BUFFER, self.hostMem.nbytes, 
-            self.hostMem, GL_STATIC_DRAW)
-        
-        # glEnableVertexAttribArray(5)
-        # glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 64, ctypes.c_void_p(0))
-        # glEnableVertexAttribArray(6)
-        # glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 64, ctypes.c_void_p(16))
-        # glEnableVertexAttribArray(5)
-        # glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, 64, ctypes.c_void_p(32))
-        # glEnableVertexAttribArray(5)
-        # glVertexAttribPointer(8, 4, GL_FLOAT, GL_FALSE, 64, ctypes.c_void_p(48))
-        # glVertexAttribDivisor(5, 1)
-        # glVertexAttribDivisor(6, 1)
-        # glVertexAttribDivisor(7, 1)
-        # glVertexAttribDivisor(8, 1)
-        # glBindBufferBase(GL_SHADER_STORAGE_BUFFER, binding, self.deviceMem)
-        self.elements_updated = 0
-
-    def recordElem(self, i, element):
-        if i >= self.size:
-            self.resize()
-
-        index = self.element_count * i
-        self.hostMem[index : index + self.element_count] = element[:]
-        self.elements_updated += 1
-
-    def resize(self):
-        self.destroy()
-
-        new_size = self.size * 2
-
-        hostMem = np.zeros(self.element_count * new_size, dtype=self.dtype)
-        hostMem[0:self.element_count * self.size] = self.hostMem[:]
-        self.hostMem = hostMem
-        self.size = new_size
-
-        self.deviceMem = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, self.deviceMem)
-        glBufferData(GL_ARRAY_BUFFER, self.hostMem.nbytes, 
-            self.hostMem, GL_STATIC_DRAW)
-        # glBufferStorage(
-        #     GL_SHADER_STORAGE_BUFFER, self.hostMem.nbytes, 
-        #     self.hostMem, GL_DYNAMIC_STORAGE_BIT)
-
-    def readFrom(self):
-        glBindBuffer(GL_ARRAY_BUFFER, self.deviceMem)
-        glBufferData(GL_ARRAY_BUFFER, self.hostMem.nbytes, 
-            self.hostMem, GL_STATIC_DRAW)
-        
-        # glBufferSubData(GL_ARRAY_BUFFER, 0, self.element_count * 4 * self.elements_updated, self.hostMem)
-        # glBindBufferBase(GL_ARRAY_BUFFER, self.binding, self.deviceMem)
-        self.elements_updated = 0
-
-    def destroy(self):
-        glDeleteBuffers(1, (self.deviceMem,))
-
 class Mesh:
     def __init__(self):
         #x, y, z, s, t, nx, ny, nz, tangent, bitangent
@@ -816,12 +644,6 @@ class Mesh:
     def draw(self):
         glBindVertexArray(self.vao)
         glDrawArrays(GL_TRIANGLES, 0, self.vertex_count)
-
-    def drawInstanced(self, baseInst, instCount):
-        # glBindVertexArray(self.vao)
-        # glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, self.vertex_count, instCount, baseInst)
-        glBindVertexArray(self.vao)
-        glDrawArraysInstanced(GL_TRIANGLES, 0, self.vertex_count, instCount)
 
     def destroy(self):
         glDeleteVertexArrays(1, (self.vao,))
@@ -1090,81 +912,13 @@ class Material3D(Material):
             Material2D(f"gfx/{filename}/{filename}_GLOSS.{filetype}", 3),
         ]
 
-        # self.textures = []
-
-        # #albedo: 0
-        # self.textures.append(glGenTextures(1))
-        # glBindTexture(GL_TEXTURE_2D, self.textures[0])
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
-        # with Image.open(f"gfx/{filepath}_COL.{filetype}", mode = 'r') as image:
-        #     image_width, image_height = image.size
-        #     image = image.convert("RGBA")
-        #     img_data = bytes(image.tobytes())
-        #     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-        # glGenerateMipmap(GL_TEXTURE_2D)
-
-        # #ambient occlusion: 1
-        # self.textures.append(glGenTextures(1))
-        # glBindTexture(GL_TEXTURE_2D, self.textures[1])
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
-        # with Image.open(f"gfx/{filepath}_AO.{filetype}", mode = 'r') as image:
-        #     image_width, image_height = image.size
-        #     image = image.convert("RGBA")
-        #     img_data = bytes(image.tobytes())
-        #     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-        # glGenerateMipmap(GL_TEXTURE_2D)
-
-        # #normal: 2
-        # self.textures.append(glGenTextures(1))
-        # glBindTexture(GL_TEXTURE_2D, self.textures[2])
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
-        # with Image.open(f"gfx/{filepath}_NRM.{filetype}", mode = 'r') as image:
-        #     image_width, image_height = image.size
-        #     image = image.convert("RGBA")
-        #     img_data = bytes(image.tobytes())
-        #     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-        # glGenerateMipmap(GL_TEXTURE_2D)
-
-        # #specular: 3
-        # self.textures.append(glGenTextures(1))
-        # glBindTexture(GL_TEXTURE_2D, self.textures[3])
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR)
-        # glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-
-        # with Image.open(f"gfx/{filepath}_GLOSS.{filetype}", mode = 'r') as image:
-        #     image_width, image_height = image.size
-        #     image = image.convert("RGBA")
-        #     img_data = bytes(image.tobytes())
-        #     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
-        # glGenerateMipmap(GL_TEXTURE_2D)
-
     def use(self):
         for texture in self.textures:
             texture.use()
 
-        # for i in range(len(self.textures)):
-        #     glActiveTexture(GL_TEXTURE0 + i)
-        #     glBindTexture(GL_TEXTURE_2D, self.textures[i])
-
     def destroy(self):
         for texture in self.textures:
             texture.destroy()
-
-        # glDeleteTextures(len(self.textures), self.textures)
 
 class Plane:
     def __init__(self, w, h, k):
