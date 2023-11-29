@@ -36,7 +36,7 @@ layout (location=0) out vec4 color;
 
 vec3 calculatePointLight(PointLight light, vec3 normal, vec3 lightPos, vec3 viewDir);
 vec3 calculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir);
-float calculateShadow(vec4 fragmentPosLightSpace) ;
+float calculateShadow(vec4 fragmentPosLightSpace, vec3 normal) ;
 
 void main()
 {
@@ -47,7 +47,7 @@ void main()
     lightLevel = lightLevel * texture(material.ao, fragmentTexCoord).xyz;
 
     //солнечный свет
-    float shadow = calculateShadow(fragmentPosLightSpace);
+    float shadow = calculateShadow(fragmentPosLightSpace, normal);
     lightLevel += (1.0 - shadow) * calculateDirectionalLight(sun, normal, viewDir);
     
     for (int i = 0; i < 8; i++)
@@ -99,15 +99,15 @@ vec3 calculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir
     return result;
 }
 
-float calculateShadow(vec4 fragmentPosLightSpace) 
+float calculateShadow(vec4 fragmentPosLightSpace, vec3 normal) 
 {
     vec3 projCoords = fragmentPosLightSpace.xyz / fragmentPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
 
-    vec3 normal = -normalize(vec3(1.0) - 2.0 * texture(material.normal, fragmentTexCoord).xyz);
-    vec3 lightDir = normalize(-10 * sun.direction - fragmentPosition);
+    //vec3 normal = -normalize(vec3(1.0) - 2.0 * texture(material.normal, fragmentTexCoord).xyz);
+    vec3 lightDir = normalize(sun.direction - fragmentPosition);
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
 
     float shadow = 0.0;
@@ -117,10 +117,11 @@ float calculateShadow(vec4 fragmentPosLightSpace)
         for (int y = -1; y <= 1; ++y)
         {
             float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelsize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+            shadow += currentDepth - 0.005 > pcfDepth ? 1.0 : 0.0;
         }
     }
-    shadow /= 5.0;
+    shadow /= 9.0;
+
     if (projCoords.z > 1.0) {
         shadow = 0.0;
     }

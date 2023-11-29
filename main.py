@@ -13,6 +13,7 @@ ENTITY_TYPE = {
     "CARPET": 0,
     "POINTLIGHT": 1,
     "FLOOR": 2,
+    "WALL": 3,
 
     "FRUITBOWL": 5,
     "FRUITPEARS": 6,
@@ -168,9 +169,9 @@ class Scene:
     def __init__(self):
         self.lights = [
             Light(
-                position=[0, 12, -2],
+                position=[0, 12, 0],
                 color=[1, 1, 1],
-                strength=0
+                strength=7
             ),
             Light(
                 position=[20, 10, -25],
@@ -213,21 +214,21 @@ class Scene:
         self.entities: dict[int, list[Obj3D]] = {
             ENTITY_TYPE["CARPET"]: [
                 Obj3D(
-                    position = [0, -3, 0],
+                    position = [0, -2, 0],
                     eulers = [0, 0, 0]
                 )
             ],
 
             ENTITY_TYPE["FRUITBOWL"]: [
                 Obj3D(
-                position = [0, 0.1, 0],
+                position = [0, 0, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
 
             ENTITY_TYPE["FRUITPEARS"]: [
                 Obj3D(
-                position = [0.02, 0.26, -0.02],
+                position = [0, 0.26, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
@@ -241,29 +242,60 @@ class Scene:
 
             ENTITY_TYPE["FLOOR"]: [
                 Obj3D(
-                position = [0, -3, 0],
+                position = [0, -30, 0],
                 eulers = [-90, 0, 0]
                 ),
+
+                # Obj3D(
+                # position = [-4, -3, -12],
+                # eulers = [0, 0, 0]
+                # ),
+
+                # Obj3D(
+                # position = [-4, -3, 12],
+                # eulers = [0, 0, 0]
+                # ),
+            ],
+
+            ENTITY_TYPE["WALL"]: [
+
+                Obj3D(
+                position = [0, 10, -12],
+                eulers = [0, 0, 0]
+                ),
+                # Obj3D(
+                # position = [0, 6, 12],
+                # eulers = [0, 0, 0]
+                # ),
+                Obj3D(
+                position = [12, 8, 0],
+                eulers = [0, 0, 90]
+                ),
+
+                # Obj3D(
+                # position = [-4, -3, 12],
+                # eulers = [0, 0, 0]
+                # ),
             ],
 
 
-            # ENTITY_TYPE["CHAIRS"]: [
-            #     Obj3D(
-            #     position = [-20, -0.26, -20],
-            #     eulers = [0, 0, 0]
-            #     ),
-            # ],
+            ENTITY_TYPE["CHAIRS"]: [
+                Obj3D(
+                position = [0, 0, 0],
+                eulers = [0, 0, 0]
+                ),
+            ],
 
             ENTITY_TYPE["CHAIRS1"]: [
                 Obj3D(
-                position = [0, -0.26, 0],
+                position = [0, 0, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
 
             ENTITY_TYPE["TABLEFRAME"]: [
                 Obj3D(
-                position = [-20, -0.26, -20],
+                position = [0, -0.26, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
@@ -350,13 +382,14 @@ class GraphicsEngine:
             ENTITY_TYPE["CARPET"]: ObjMesh("models/carpet.obj"),
             ENTITY_TYPE["POINTLIGHT"]: ObjMesh("models/cube.obj"),
             ENTITY_TYPE["FLOOR"]: PlaneMesh(400, 400, 50),
+            ENTITY_TYPE["WALL"]: PlaneMesh(24, 24, 1),
             ENTITY_TYPE["FRUITBOWL"]: ObjMesh("models/fruitbowl.obj"),
             ENTITY_TYPE["FRUITPEARS"]: ObjMesh("models/fruitpears.obj"),
             ENTITY_TYPE["TABLE"]: ObjMesh("models/table.obj"),
             ENTITY_TYPE["TABLEFRAME"]: ObjMesh("models/tableframe.obj"),
             ENTITY_TYPE["TABLELEGS"]: ObjMesh("models/tablelegs.obj"),
-            # ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
-            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
+            ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
+            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/bigchairs.obj"),
         }
 
         mt = Material3D("Carpet", "jpg", "png")
@@ -365,14 +398,15 @@ class GraphicsEngine:
 
         self.materials: dict[int, Material] = {
             ENTITY_TYPE["CARPET"]: mt,
-            ENTITY_TYPE["POINTLIGHT"]: mt,
+            # ENTITY_TYPE["POINTLIGHT"]: mt,
             ENTITY_TYPE["FLOOR"]: Material3D("Floor", "jpg", "jpg"),
+            ENTITY_TYPE["WALL"]: Material3D("Wall", "jpg", "jpg"),
             ENTITY_TYPE["FRUITBOWL"]: Material3D("FruitBowl", "jpg", "jpg"),
             ENTITY_TYPE["FRUITPEARS"]: Material3D("FruitPears", "jpg", "jpg"),
             ENTITY_TYPE["TABLE"]: Material3D("Table", "jpg", "jpg"),
             ENTITY_TYPE["TABLEFRAME"]: tl,
             ENTITY_TYPE["TABLELEGS"]: tl,
-            # ENTITY_TYPE["CHAIRS"]: ch,
+            ENTITY_TYPE["CHAIRS"]: ch,
             ENTITY_TYPE["CHAIRS1"]: ch
         }
 
@@ -404,6 +438,7 @@ class GraphicsEngine:
         glDrawBuffer(GL_NONE)
         glReadBuffer(GL_NONE)
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
+        
 
     def setOnetimeUnifs(self):
 
@@ -426,7 +461,7 @@ class GraphicsEngine:
         
         glUniform3fv(
             glGetUniformLocation(shader.prog,"sun.direction"), 
-            1, np.array([-1, -2, -1],dtype=np.float32))
+            1, np.array([-4, -3, -1],dtype=np.float32))
         
         glUniform3fv(
             glGetUniformLocation(shader.prog,"sun.color"), 
@@ -486,8 +521,8 @@ class GraphicsEngine:
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        lightProjection = pyrr.matrix44.create_orthogonal_projection(-10, 10, -10, 10, 0.1, 100, dtype=np.float32)
-        lightPosition = np.array([-4, 10, 1], dtype=np.float32)
+        lightProjection = pyrr.matrix44.create_orthogonal_projection(-20, 20, -20, 20, 0.1, 100, dtype=np.float32)
+        lightPosition = np.array([-7, 5, 1], dtype=np.float32)
         lookTarget = np.array([0,0,0], dtype=np.float32)
         globalUp = np.array([0,1,0], dtype=np.float32)
         lightView = pyrr.matrix44.create_look_at(lightPosition, lookTarget, globalUp, dtype=np.float32)
@@ -495,6 +530,7 @@ class GraphicsEngine:
 
         shader = self.shaders[2]
         shader.use()
+
 
         glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["LIGHT_SPTRANS"]), 1, GL_FALSE, lightSpaceTransform)
 
@@ -518,6 +554,7 @@ class GraphicsEngine:
                     self.meshes[entityType].draw()
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
+
 
 
         view_transform = pyrr.matrix44.create_look_at(
