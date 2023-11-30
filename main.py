@@ -214,21 +214,21 @@ class Scene:
         self.entities: dict[int, list[Obj3D]] = {
             ENTITY_TYPE["CARPET"]: [
                 Obj3D(
-                    position = [0, -2, 0],
+                    position = [0, -3, 0],
                     eulers = [0, 0, 0]
                 )
             ],
 
             ENTITY_TYPE["FRUITBOWL"]: [
                 Obj3D(
-                position = [0, 0, 0],
+                position = [0, 0.1, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
 
             ENTITY_TYPE["FRUITPEARS"]: [
                 Obj3D(
-                position = [0, 0.26, 0],
+                position = [0, 0.36, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
@@ -242,7 +242,7 @@ class Scene:
 
             ENTITY_TYPE["FLOOR"]: [
                 Obj3D(
-                position = [0, -30, 0],
+                position = [0, -3, 0],
                 eulers = [-90, 0, 0]
                 ),
 
@@ -260,7 +260,7 @@ class Scene:
             ENTITY_TYPE["WALL"]: [
 
                 Obj3D(
-                position = [0, 10, -12],
+                position = [0, 8, -12],
                 eulers = [0, 0, 0]
                 ),
                 # Obj3D(
@@ -281,14 +281,14 @@ class Scene:
 
             ENTITY_TYPE["CHAIRS"]: [
                 Obj3D(
-                position = [0, 0, 0],
+                position = [0, -0.6, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
 
             ENTITY_TYPE["CHAIRS1"]: [
                 Obj3D(
-                position = [0, 0, 0],
+                position = [0, -0.6, 0],
                 eulers = [0, 0, 0]
                 ),
             ],
@@ -381,7 +381,7 @@ class GraphicsEngine:
         self.meshes: dict[int, Mesh] = {
             ENTITY_TYPE["CARPET"]: ObjMesh("models/carpet.obj"),
             ENTITY_TYPE["POINTLIGHT"]: ObjMesh("models/cube.obj"),
-            ENTITY_TYPE["FLOOR"]: PlaneMesh(400, 400, 50),
+            ENTITY_TYPE["FLOOR"]: PlaneMesh(24, 24, 3),
             ENTITY_TYPE["WALL"]: PlaneMesh(24, 24, 1),
             ENTITY_TYPE["FRUITBOWL"]: ObjMesh("models/fruitbowl.obj"),
             ENTITY_TYPE["FRUITPEARS"]: ObjMesh("models/fruitpears.obj"),
@@ -389,7 +389,7 @@ class GraphicsEngine:
             ENTITY_TYPE["TABLEFRAME"]: ObjMesh("models/tableframe.obj"),
             ENTITY_TYPE["TABLELEGS"]: ObjMesh("models/tablelegs.obj"),
             ENTITY_TYPE["CHAIRS"]: ObjMesh("models/chairs2.obj"),
-            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/bigchairs.obj"),
+            ENTITY_TYPE["CHAIRS1"]: ObjMesh("models/chairs4.obj"),
         }
 
         mt = Material3D("Carpet", "jpg", "png")
@@ -398,7 +398,7 @@ class GraphicsEngine:
 
         self.materials: dict[int, Material] = {
             ENTITY_TYPE["CARPET"]: mt,
-            # ENTITY_TYPE["POINTLIGHT"]: mt,
+            ENTITY_TYPE["POINTLIGHT"]: mt,
             ENTITY_TYPE["FLOOR"]: Material3D("Floor", "jpg", "jpg"),
             ENTITY_TYPE["WALL"]: Material3D("Wall", "jpg", "jpg"),
             ENTITY_TYPE["FRUITBOWL"]: Material3D("FruitBowl", "jpg", "jpg"),
@@ -522,7 +522,7 @@ class GraphicsEngine:
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         lightProjection = pyrr.matrix44.create_orthogonal_projection(-20, 20, -20, 20, 0.1, 100, dtype=np.float32)
-        lightPosition = np.array([-7, 5, 1], dtype=np.float32)
+        lightPosition = np.array([-7, 3, 1], dtype=np.float32)
         lookTarget = np.array([0,0,0], dtype=np.float32)
         globalUp = np.array([0,1,0], dtype=np.float32)
         lightView = pyrr.matrix44.create_look_at(lightPosition, lookTarget, globalUp, dtype=np.float32)
@@ -530,6 +530,9 @@ class GraphicsEngine:
 
         shader = self.shaders[2]
         shader.use()
+
+        #glEnable(GL_CULL_FACE)
+        #glCullFace(GL_BACK)
 
 
         glUniformMatrix4fv(shader.fetchSingleLoc(UNIFORM_TYPE["LIGHT_SPTRANS"]), 1, GL_FALSE, lightSpaceTransform)
@@ -544,7 +547,7 @@ class GraphicsEngine:
 
         for entityType, entities in scene.entities.items():
 
-            if entityType != ENTITY_TYPE["POINTLIGHT"]:
+            if entityType != ENTITY_TYPE["POINTLIGHT"] and entityType != ENTITY_TYPE["FRUITPEARS"]:
 
                 self.materials[entityType].use()
                 
@@ -555,7 +558,8 @@ class GraphicsEngine:
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
-
+        #glDisable(GL_CULL_FACE)
+        #glCullFace(GL_BACK)
 
         view_transform = pyrr.matrix44.create_look_at(
             eye = scene.camera.position, 
