@@ -13,8 +13,8 @@ ENTITY_TYPE = {
     "CARPET": 0,
     "POINTLIGHT": 1,
     "FLOOR": 2,
-    "WALL": 3,
-
+    "WALL1": 3,
+    "WALL2": 4,
     "FRUITBOWL": 5,
     "FRUITPEARS": 6,
     "TABLE": 7,
@@ -257,20 +257,16 @@ class Scene:
                 # ),
             ],
 
-            ENTITY_TYPE["WALL"]: [
+            ENTITY_TYPE["WALL1"]: [
 
                 Obj3D(
-                position = [0, 8, -12],
+                position = [0, 4.5, -12],
                 eulers = [0, 0, 0]
                 ),
                 # Obj3D(
                 # position = [0, 6, 12],
                 # eulers = [0, 0, 0]
                 # ),
-                Obj3D(
-                position = [12, 8, 0],
-                eulers = [0, 0, 90]
-                ),
 
                 # Obj3D(
                 # position = [-4, -3, 12],
@@ -278,6 +274,15 @@ class Scene:
                 # ),
             ],
 
+            ENTITY_TYPE["WALL2"]: [
+
+                
+                Obj3D(
+                position = [12, 4.5, 0],
+                eulers = [0, 0, 90]
+                ),
+
+            ],
 
             ENTITY_TYPE["CHAIRS"]: [
                 Obj3D(
@@ -382,7 +387,8 @@ class GraphicsEngine:
             ENTITY_TYPE["CARPET"]: ObjMesh("models/carpet.obj"),
             ENTITY_TYPE["POINTLIGHT"]: ObjMesh("models/cube.obj"),
             ENTITY_TYPE["FLOOR"]: PlaneMesh(24, 24, 3),
-            ENTITY_TYPE["WALL"]: PlaneMesh(24, 24, 1),
+            ENTITY_TYPE["WALL1"]: PlaneMesh(24, 15, 0.5),
+            ENTITY_TYPE["WALL2"]: PlaneMesh(24, 15, 1),
             ENTITY_TYPE["FRUITBOWL"]: ObjMesh("models/fruitbowl.obj"),
             ENTITY_TYPE["FRUITPEARS"]: ObjMesh("models/fruitpears.obj"),
             ENTITY_TYPE["TABLE"]: ObjMesh("models/table.obj"),
@@ -395,12 +401,14 @@ class GraphicsEngine:
         mt = Material3D("Carpet", "jpg", "png")
         tl = Material3D("TableFrame", "jpg", "jpg")
         ch = Material3D("Chairs", "jpeg", "jpeg")
+        wl = Material3D("Wall", "jpg", "jpg")
 
         self.materials: dict[int, Material] = {
             ENTITY_TYPE["CARPET"]: mt,
             ENTITY_TYPE["POINTLIGHT"]: mt,
             ENTITY_TYPE["FLOOR"]: Material3D("Floor", "jpg", "jpg"),
-            ENTITY_TYPE["WALL"]: Material3D("Wall", "jpg", "jpg"),
+            ENTITY_TYPE["WALL1"]: wl,
+            ENTITY_TYPE["WALL2"]: wl,
             ENTITY_TYPE["FRUITBOWL"]: Material3D("FruitBowl", "jpg", "jpg"),
             ENTITY_TYPE["FRUITPEARS"]: Material3D("FruitPears", "jpg", "jpg"),
             ENTITY_TYPE["TABLE"]: Material3D("Table", "jpg", "jpg"),
